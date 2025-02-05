@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SandpackProvider,
-  SandpackLayout,
   SandpackCodeEditor,
   SandpackPreview,
   SandpackFileExplorer,
-  FileTabs,
 } from '@codesandbox/sandpack-react';
 import { nightOwl } from '@codesandbox/sandpack-themes';
 import { LayoutGroup, motion } from 'framer-motion';
 
+// Define an interface for the files object
+interface SandpackFiles {
+  [key: string]: string;
+}
+
 interface PreviewSectionProps {
-  code: string;
+  code: any;
 }
 
 const PreviewSection = ({ code }: PreviewSectionProps) => {
-  const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
-  
-  const files = {
-    '/App.jsx': code || `export default function App() {
+  const [files, setFiles] = useState<SandpackFiles>({
+    '/App.jsx': `export default function App() {
   return (
     <div>
       <h1>Enter a prompt to generate code</h1>
@@ -42,7 +43,44 @@ export default function Index() {
     </div>
   );
 }`
-  };
+  });
+
+  const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
+
+  // Effect to update files when code prop changes
+  useEffect(() => { 
+    if (code && typeof code === 'object') {
+      // Create a new files object
+      const newFiles: SandpackFiles = { ...files };
+
+      // Map the backend response to Sandpack files
+      Object.entries(code).forEach(([fileName, fileContent]) => {
+        // Determine the appropriate file extension
+        const normalizedFileName = fileName.includes('.')
+          ? fileName 
+          : (fileName.includes('html') 
+              ? '/App.html' 
+              : '/App.jsx');
+
+        // Ensure fileContent is a string
+        const content = typeof fileContent === 'string' 
+          ? fileContent 
+          : JSON.stringify(fileContent);
+
+        // Update or add the file using type assertion
+        newFiles[normalizedFileName as keyof SandpackFiles] = content;
+      });
+
+      // Update files state
+      setFiles(newFiles);
+    } else if (typeof code === 'string') {
+      // If code is a string, update App.jsx
+      setFiles(prev => ({
+        ...prev,
+        '/App.jsx': code
+      }));
+    }
+  }, [code]);
 
   return (
     <div className="w-1/2 bg-gray-900 flex flex-col">
@@ -93,10 +131,6 @@ export default function Index() {
           </div>
 
           <div className="flex-1 flex flex-col">
-            {/* <div className="border-b border-gray-700"> */}
-              {/* <FileTabs /> */}
-            {/* </div> */}
-            
             <div className="flex-1 relative">
               <div className={`absolute inset-0 transition-opacity duration-300 ${
                 activeView === 'code' ? 'opacity-100 z-10' : 'opacity-0 z-0'
