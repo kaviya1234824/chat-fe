@@ -35,7 +35,8 @@ const ChatSection = ({ onCodeUpdate }: ChatSectionProps) => {
         console.log("API Response:", response);
         if (response.data.success) {
           // Get the App.jsx code from the response
-          const appCode = response.data.data['/App.jsx'] || '';
+          const appCode = response.data.data;
+          console.log(appCode)
           
           // Add AI response message
           setMessages(prev => [...prev, {
@@ -46,6 +47,7 @@ const ChatSection = ({ onCodeUpdate }: ChatSectionProps) => {
 
           // Update code in preview section
           onCodeUpdate(appCode);
+          console.log("appdata",appCode)
         }
       } catch (error) {
         console.error('Error generating code:', error);
@@ -78,7 +80,7 @@ const ChatSection = ({ onCodeUpdate }: ChatSectionProps) => {
             >
               <div>{message.text}</div>
               {message.code && (
-                <pre className="mt-2 p-2 bg-gray-800 text-black rounded overflow-x-auto">
+                <pre className="mt-2 p-2 bg-gray-800 text-white rounded overflow-x-auto">
                   <code>{message.code}</code>
                 </pre>
               )}

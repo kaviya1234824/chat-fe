@@ -13,7 +13,7 @@ const MainLayout = () => {
 
       <div className="flex-1 flex">
         <ChatSection onCodeUpdate={setCurrentCode} />
-        <PreviewSection code={currentCode} />
+        <PreviewSection data={currentCode} />
       </div>
     </div>
   );
