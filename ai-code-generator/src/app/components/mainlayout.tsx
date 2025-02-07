@@ -1,10 +1,16 @@
 'use client'
-import React,{useState} from 'react';
+import React, { useState } from 'react';
 import ChatSection from './chat';
 import PreviewSection from './preview';
 
+interface ProjectData {
+  code: any; // Dynamic file/folder structure (JSON object)
+  framework: string; // e.g., "react", "angular", etc.
+}
+
 const MainLayout = () => {
-  const [currentCode, setCurrentCode] = useState('');
+  const [project, setProject] = useState<ProjectData | null>(null);
+
   return (
     <div className="h-screen flex flex-col">
       <header className="bg-gray-800 text-white p-4">
@@ -12,8 +18,8 @@ const MainLayout = () => {
       </header>
 
       <div className="flex-1 flex">
-        <ChatSection onCodeUpdate={setCurrentCode} />
-        <PreviewSection data={currentCode} />
+        <ChatSection onCodeUpdate={setProject} />
+        <PreviewSection data={project} />
       </div>
     </div>
   );

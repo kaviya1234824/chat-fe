@@ -9,113 +9,93 @@ import {
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup, motion } from "framer-motion";
 
-// Define supported frameworks
-const FRAMEWORK_OPTIONS: { label: string; value: SandpackPredefinedTemplate }[] = [
-  { label: "React", value: "react" },
-  { label: "React + TypeScript", value: "react-ts" },
-  { label: "Vue", value: "vue" },
-  { label: "Svelte", value: "svelte" },
-  { label: "Vanilla JS", value: "vanilla" },
-  { label: "Vanilla TS", value: "vanilla-ts" },
-  { label: "Vite + React", value: "vite-react" },
-  { label: "Vite + Vue", value: "vite-vue" },
+// Allowed templates for Sandpack preview.
+const allowedTemplates = [
+  "react",
+  "react-ts",
+  "vue",
+  "svelte",
+  "vanilla",
+  "vanilla-ts",
+  "vite-react",
+  "vite-vue",
 ];
 
 interface SandpackFiles {
   [key: string]: string;
 }
 
-interface PreviewSectionProps {
-  data: string; // API response containing code files
+interface ProjectData {
+  code: any; // Nested folder structure (JSON object)
+  framework: string;
 }
 
-const extractCodeFiles = (data: string): SandpackFiles => {
-  const files: SandpackFiles = {
-    
-  };
+interface PreviewSectionProps {
+  data: ProjectData | null;
+}
 
-  // Match code blocks using regex
-  const regex = /```(\w+)\n([\s\S]+?)\n```/g;
-  let match;
-
-  while ((match = regex.exec(data)) !== null) {
-    const language = match[1]; // File type (jsx, ts, css, json, html, etc.)
-    let content = match[2]; // Extracted code content
-
-    let filename = "";
-
-    // Determine filename based on the language
-    switch (language) {
-      case "jsx":
-        filename = content.includes("ReactDOM") ? "/index.jsx" : "/App.jsx";
-        break;
-      case "tsx":
-        filename = content.includes("ReactDOM") ? "/index.tsx" : "/App.tsx";
-        break;
-      case "js":
-        filename = "/App.js";
-        break;
-      case "ts":
-        filename = "/App.ts";
-        break;
-      case "css":
-        filename = "/App.css";
-        break;
-      case "html":
-        filename = "/index.html";
-        break;
-      case "json":
-        filename = "/package.json";
-        break;
-      case "svelte":
-        filename = "/App.svelte";
-        break;
-      case "vue":
-        filename = "/App.vue";
-        break;
-      default:
-        filename = `/unknown.${language}`;
-    }
-
-    if (filename) {
-      files[filename] = content;
+/**
+ * Recursively flattens a nested file structure.
+ * Example:
+ * {
+ *   "package.json": "content",
+ *   "src": { "App.jsx": "content" }
+ * }
+ * becomes:
+ * {
+ *   "package.json": "content",
+ *   "src/App.jsx": "content"
+ * }
+ */
+const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
+  let result: SandpackFiles = {};
+  for (const key in files) {
+    const value = files[key];
+    const path = prefix ? `${prefix}/${key}` : key;
+    if (typeof value === "string") {
+      result[path] = value;
+    } else if (typeof value === "object" && value !== null) {
+      result = { ...result, ...flattenFiles(value, path) };
     }
   }
-
-  return files;
+  return result;
 };
 
 const PreviewSection = ({ data }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
+  // Added state for toggling between "code" and "preview" views.
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
-  const [template, setTemplate] = useState<SandpackPredefinedTemplate>("react");
-  console.log("safdasdfas",data)
+
+  // Determine the Sandpack template based on the project's framework.
+  // If the returned framework isn’t in the allowed list, fallback to "vanilla".
+  const template =
+    data && data.framework
+      ? allowedTemplates.includes(data.framework.toLowerCase())
+        ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
+        : "vanilla"
+      : "react";
 
   useEffect(() => {
-    if (data) {
-      setFiles({ "/App.jsx": data }); // Update files with new code
+    if (data && data.code) {
+      const flattened = flattenFiles(data.code);
+      setFiles(flattened);
+    } else {
+      setFiles({});
     }
   }, [data]);
 
   return (
     <div className="w-full bg-gray-900 flex flex-col h-screen">
-      {/* Framework Selector */}
+      {/* Header showing the selected framework */}
       <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
         <h2 className="text-white text-lg">Sandbox Editor</h2>
-        <select
-          value={template}
-          onChange={(e) => setTemplate(e.target.value as SandpackPredefinedTemplate)}
-          className="bg-gray-700 text-white px-4 py-2 rounded-lg"
-        >
-          {FRAMEWORK_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        {data && data.framework && (
+          <span className="text-gray-300 capitalize">
+            Framework: {data.framework}
+          </span>
+        )}
       </div>
 
-      {/* Sandpack Provider */}
       <SandpackProvider
         theme={nightOwl}
         template={template}
@@ -159,7 +139,7 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
             </div>
           </div>
 
-          {/* Editor & Preview */}
+          {/* Editor & Preview Panels */}
           <div className="flex flex-1">
             <div className="w-48 border-r border-gray-700">
               <SandpackFileExplorer />
@@ -167,26 +147,43 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
 
             <div className="flex-1 flex flex-col">
               <div className="flex-1 relative">
-                <div
-                  className={`absolute inset-0 transition-opacity duration-300 ${
-                    activeView === "code" ? "opacity-100 z-10" : "opacity-0 z-0"
-                  }`}
-                >
-                  <SandpackCodeEditor showLineNumbers={true} showInlineErrors={true} wrapContent={true} closableTabs={false} />
-                </div>
-                <div
-                  className={`absolute inset-0 transition-opacity duration-300 ${
-                    activeView === "preview" ? "opacity-100 z-10" : "opacity-0 z-0"
-                  }`}
-                >
-                  <SandpackPreview showNavigator={true} showRefreshButton={true} />
-                </div>
+                <ViewPanels activeView={activeView} />
               </div>
             </div>
           </div>
         </div>
       </SandpackProvider>
     </div>
+  );
+};
+
+// Helper component to toggle between the code editor and preview.
+interface ViewPanelsProps {
+  activeView: "code" | "preview";
+}
+const ViewPanels = ({ activeView }: ViewPanelsProps) => {
+  return (
+    <>
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${
+          activeView === "code" ? "opacity-100 z-10" : "opacity-0 z-0"
+        }`}
+      >
+        <SandpackCodeEditor
+          showLineNumbers={true}
+          showInlineErrors={true}
+          wrapContent={true}
+          closableTabs={false}
+        />
+      </div>
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${
+          activeView === "preview" ? "opacity-100 z-10" : "opacity-0 z-0"
+        }`}
+      >
+        <SandpackPreview showNavigator={true} showRefreshButton={true} />
+      </div>
+    </>
   );
 };
 
