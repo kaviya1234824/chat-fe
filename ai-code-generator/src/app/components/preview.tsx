@@ -88,7 +88,7 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
     <div className="w-full bg-gray-900 flex flex-col h-screen">
       {/* Header showing the selected framework */}
       <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-        <h2 className="text-white text-lg">Sandbox Editor</h2>
+        <h2 className="text-white text-lg">Code</h2>
         {data && data.framework && (
           <span className="text-gray-300 capitalize">
             Framework: {data.framework}

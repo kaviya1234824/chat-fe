@@ -29,46 +29,27 @@ const ChatSection = ({ onCodeUpdate }: ChatSectionProps) => {
     if (input.trim()) {
       setIsLoading(true);
 
-      // Add user message
       setMessages((prev) => [...prev, { text: input, sender: 'user' }]);
 
       try {
-        // Make API call to backend
         const response = await api.post('agent-model/generate', {
           prompt: input,
         });
 
         if (response.data.success) {
-          // Extract the generated project artifact from the response
           const responseData = response.data.data;
           const projectCode = responseData.code; // JSON folder structure
           const framework = responseData.framework || '';
+          const otherResponse = responseData.otherRespsonse
 
-          // For display in chat, show the generated code (pretty-printed JSON)
-          const codeDisplay = JSON.stringify(projectCode, null, 2);
-
-          // Add AI response message with code
           setMessages((prev) => [
             ...prev,
             {
-              text: "Here's your generated component:",
+              text: otherResponse,
               sender: 'assistant',
-              code: codeDisplay,
             },
           ]);
 
-          // If there's an additional response (otherResponse), append it
-          if (responseData.otherResponse && responseData.otherResponse.trim()) {
-            setMessages((prev) => [
-              ...prev,
-              {
-                text: responseData.otherResponse,
-                sender: 'assistant',
-              },
-            ]);
-          }
-
-          // Update preview with project artifact and framework from backend
           onCodeUpdate({ code: projectCode, framework });
         }
       } catch (error) {
