@@ -34,23 +34,15 @@ interface PreviewSectionProps {
 }
 
 /**
- * Recursively flattens a nested file structure.
- * Example:
- * {
- *   "package.json": "content",
- *   "src": { "App.jsx": "content" }
- * }
- * becomes:
- * {
- *   "package.json": "content",
- *   "src/App.jsx": "content"
- * }
+ * Flattens a nested file structure into a single object with paths
+ * starting with a slash.
  */
 const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
   let result: SandpackFiles = {};
   for (const key in files) {
     const value = files[key];
-    const path = prefix ? `${prefix}/${key}` : key;
+    // Prepend a leading slash at the root level.
+    const path = prefix ? `${prefix}/${key}` : `/${key}`;
     if (typeof value === "string") {
       result[path] = value;
     } else if (typeof value === "object" && value !== null) {
@@ -60,25 +52,105 @@ const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
   return result;
 };
 
+/**
+ * Checks common candidates for an entry file.
+ */
+const getEntryFile = (files: SandpackFiles, template: string): string => {
+  const candidates = [
+    "/index.js",
+    "/index.tsx",
+    "/src/index.js",
+    "/src/index.tsx",
+    "/App.js",
+    "/App.tsx",
+    "/src/App.js",
+    "/src/App.tsx",
+  ];
+  for (const candidate of candidates) {
+    if (files[candidate]) {
+      return candidate;
+    }
+  }
+  // Fallback to a default index file name.
+  return template.includes("ts") ? "/index.tsx" : "/index.js";
+};
+
 const PreviewSection = ({ data }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
 
+  // Determine the template (default to "react")
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
         ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
-        : "vanilla"
+        : "react"
       : "react";
 
   useEffect(() => {
     if (data && data.code) {
+      // Flatten and normalize the file structure.
       const flattened = flattenFiles(data.code);
+      console.log("Flattened files:", flattened);
+
+      // Ensure an entry file exists.
+      const entryCandidates = [
+        "/index.js",
+        "/index.tsx",
+        "/src/index.js",
+        "/src/index.tsx",
+      ];
+      const hasEntry = entryCandidates.some((candidate) => flattened[candidate]);
+      if (!hasEntry) {
+        const defaultEntry = template.includes("ts") ? "/index.tsx" : "/index.js";
+        flattened[defaultEntry] = template.includes("ts")
+          ? `import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
+
+ReactDOM.render(<App />, document.getElementById("root"));`
+          : `import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
+
+ReactDOM.render(<App />, document.getElementById("root"));`;
+      }
+
+      // Ensure an App file exists.
+      const appCandidates = [
+        "/App.js",
+        "/App.tsx",
+        "/src/App.js",
+        "/src/App.tsx",
+      ];
+      const hasApp = appCandidates.some((candidate) => flattened[candidate]);
+      if (!hasApp) {
+        const defaultApp = template.includes("ts") ? "/App.tsx" : "/App.js";
+        flattened[defaultApp] = `export default function App() {
+  return <div>Hello, World!</div>;
+}`;
+      }
+
+      // Ensure a public/index.html exists.
+      if (!flattened["/public/index.html"]) {
+        flattened["/public/index.html"] = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>`;
+      }
+
       setFiles(flattened);
     } else {
       setFiles({});
     }
-  }, [data]);
+  }, [data, template]);
 
   return (
     <div className="w-full bg-gray-900 flex flex-col h-screen">
@@ -92,9 +164,11 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
       </div>
 
       <SandpackProvider
+        key={JSON.stringify(files)} // Reinitialize Sandpack on files change.
         theme={nightOwl}
         template={template}
         files={files}
+        customSetup={{ entry: getEntryFile(files, template) }} // Set initial file via customSetup.
         options={{
           recompileMode: "delayed",
           recompileDelay: 500,
@@ -136,7 +210,6 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
             <div className="w-48 border-r border-gray-700">
               <SandpackFileExplorer />
             </div>
-
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 relative min-h-0">
                 <ViewPanels activeView={activeView} />
@@ -152,6 +225,7 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
 interface ViewPanelsProps {
   activeView: "code" | "preview";
 }
+
 const ViewPanels = ({ activeView }: ViewPanelsProps) => {
   return (
     <>
@@ -161,7 +235,6 @@ const ViewPanels = ({ activeView }: ViewPanelsProps) => {
         }`}
       >
         <SandpackCodeEditor
-          // style={{ height: "100%" }} 
           showLineNumbers={true}
           showInlineErrors={true}
           wrapContent={true}
@@ -173,9 +246,11 @@ const ViewPanels = ({ activeView }: ViewPanelsProps) => {
           activeView === "preview" ? "opacity-100 z-10" : "opacity-0 z-0"
         }`}
       >
-        <SandpackPreview 
-        style={{ height: "90%" }}
-        showNavigator={true} showRefreshButton={true} />
+        <SandpackPreview
+          style={{ height: "100%" }}
+          showNavigator={true}
+          showRefreshButton={true}
+        />
       </div>
     </>
   );

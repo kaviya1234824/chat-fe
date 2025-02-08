@@ -29,7 +29,7 @@ const MainLayout = () => {
         const responseData = response.data.data;
         const projectCode = responseData.code;
         const framework = responseData.framework || '';
-        const otherResponse = responseData.otherRespsonse; 
+        const otherResponse = responseData.otherResponse; // Fixed typo
 
         const msgs: Message[] = [
           { text: input, sender: 'user' },
@@ -56,26 +56,26 @@ const MainLayout = () => {
             Prompt, run, edit, and deploy full-stack web apps.
           </p>
           <div className="mt-6">
-          <div className="relative w-[500px]">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter your prompt..."
-              className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
-              disabled={isLoading}
-            />
-             {input.trim().length > 0 && (
-            <button
-              onClick={handleGenerate}
-              disabled={isLoading}
-              className="absolute top-2 right-2 px-2 py-2 bg-blue-500 text-black rounded-md hover:bg-blue-600"
-            >
-              <ArrowRight size={20} />
-            </button>
-            )}
+            <div className="relative w-[500px]">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter your prompt..."
+                className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
+                disabled={isLoading}
+              />
+              {input.trim().length > 0 && (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isLoading}
+                  className="absolute top-2 right-2 px-2 py-2 bg-blue-500 text-black rounded-md hover:bg-blue-600"
+                >
+                  <ArrowRight size={20} />
+                </button>
+              )}
+            </div>
           </div>
-          </div>
-          
+
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
