@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-interface Message {
+export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   code?: string;
@@ -9,16 +9,16 @@ interface Message {
 
 interface ChatSectionProps {
   onCodeUpdate: (project: { code: any; framework: string } | null) => void;
+  initialMessages?: Message[];
 }
 
 const api = axios.create({ baseURL: 'http://localhost:3000/api/' });
 
-const ChatSection = ({ onCodeUpdate }: ChatSectionProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // New Chat clears the conversation and preview.
   const handleNewChat = () => {
     setMessages([]);
     onCodeUpdate(null);

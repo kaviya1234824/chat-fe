@@ -9,7 +9,6 @@ import {
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup, motion } from "framer-motion";
 
-// Allowed templates for Sandpack preview.
 const allowedTemplates = [
   "react",
   "react-ts",
@@ -26,7 +25,7 @@ interface SandpackFiles {
 }
 
 interface ProjectData {
-  code: any; // Nested folder structure (JSON object)
+  code: any;
   framework: string;
 }
 
@@ -63,11 +62,8 @@ const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
 
 const PreviewSection = ({ data }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
-  // Added state for toggling between "code" and "preview" views.
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
 
-  // Determine the Sandpack template based on the project's framework.
-  // If the returned framework isn’t in the allowed list, fallback to "vanilla".
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
@@ -86,7 +82,6 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
 
   return (
     <div className="w-full bg-gray-900 flex flex-col h-screen">
-      {/* Header showing the selected framework */}
       <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
         <h2 className="text-white text-lg">Code</h2>
         {data && data.framework && (
@@ -110,9 +105,7 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
           },
         }}
       >
-        {/* Editor & Preview Layout */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* View Toggle */}
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
           <div className="p-2 bg-gray-800 border-b border-gray-700">
             <div className="flex gap-2 bg-gray-900 p-1 rounded-lg w-fit">
               <LayoutGroup>
@@ -139,14 +132,13 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
             </div>
           </div>
 
-          {/* Editor & Preview Panels */}
           <div className="flex flex-1">
             <div className="w-48 border-r border-gray-700">
               <SandpackFileExplorer />
             </div>
 
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 relative">
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 relative min-h-0">
                 <ViewPanels activeView={activeView} />
               </div>
             </div>
@@ -157,7 +149,6 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
   );
 };
 
-// Helper component to toggle between the code editor and preview.
 interface ViewPanelsProps {
   activeView: "code" | "preview";
 }
@@ -170,6 +161,7 @@ const ViewPanels = ({ activeView }: ViewPanelsProps) => {
         }`}
       >
         <SandpackCodeEditor
+          // style={{ height: "100%" }} 
           showLineNumbers={true}
           showInlineErrors={true}
           wrapContent={true}
@@ -181,7 +173,9 @@ const ViewPanels = ({ activeView }: ViewPanelsProps) => {
           activeView === "preview" ? "opacity-100 z-10" : "opacity-0 z-0"
         }`}
       >
-        <SandpackPreview showNavigator={true} showRefreshButton={true} />
+        <SandpackPreview 
+        style={{ height: "90%" }}
+        showNavigator={true} showRefreshButton={true} />
       </div>
     </>
   );
