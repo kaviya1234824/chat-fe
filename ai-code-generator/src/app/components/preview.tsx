@@ -7,7 +7,7 @@ import {
   SandpackPredefinedTemplate,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup } from "framer-motion";
 
 const allowedTemplates = [
   "react",
@@ -146,6 +146,11 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 </html>`;
       }
 
+      // If src/index.js imports "./index.css", add it if missing.
+      if (!flattened["/src/index.css"]) {
+        flattened["/src/index.css"] = "/* default index css */";
+      }
+
       setFiles(flattened);
     } else {
       setFiles({});
@@ -168,7 +173,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         theme={nightOwl}
         template={template}
         files={files}
-        customSetup={{ entry: getEntryFile(files, template) }} // Set initial file via customSetup.
+        customSetup={{ entry: getEntryFile(files, template) }}
         options={{
           recompileMode: "delayed",
           recompileDelay: 500,
@@ -179,80 +184,47 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           },
         }}
       >
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          <div className="p-2 bg-gray-800 border-b border-gray-700">
-            <div className="flex gap-2 bg-gray-900 p-1 rounded-lg w-fit">
-              <LayoutGroup>
-                {(["code", "preview"] as const).map((view) => (
-                  <button
-                    key={view}
-                    onClick={() => setActiveView(view)}
-                    className={`relative px-4 py-1 rounded-md text-sm font-medium capitalize ${
-                      activeView === view ? "text-white" : "text-gray-400"
-                    }`}
-                  >
-                    {activeView === view && (
-                      <motion.div
-                        layoutId="active-pill"
-                        className="absolute inset-0 bg-gray-700 rounded-md"
-                        style={{ zIndex: -1 }}
-                        transition={{ type: "spring", duration: 0.5 }}
-                      />
-                    )}
-                    {view}
-                  </button>
-                ))}
-              </LayoutGroup>
-            </div>
-          </div>
+        {/* Toggle Buttons */}
+        <div className="p-2 bg-gray-800 border-b border-gray-700">
+          <LayoutGroup>
+            {(["code", "preview"] as const).map((view) => (
+              <button
+                key={view}
+                onClick={() => setActiveView(view)}
+                className={`relative px-4 py-1 rounded-md text-sm font-medium capitalize ${
+                  activeView === view ? "text-white" : "text-gray-400"
+                }`}
+              >
+                {view}
+              </button>
+            ))}
+          </LayoutGroup>
+        </div>
 
-          <div className="flex flex-1">
-            <div className="w-48 border-r border-gray-700">
-              <SandpackFileExplorer />
-            </div>
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 relative min-h-0">
-                <ViewPanels activeView={activeView} />
-              </div>
-            </div>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="w-48 border-r border-gray-700">
+            <SandpackFileExplorer />
+          </div>
+          <div className="flex-1">
+            {activeView === "code" ? (
+              <SandpackCodeEditor
+                showLineNumbers={true}
+                showInlineErrors={true}
+                wrapContent={true}
+                closableTabs={false}
+                style={{ height: "100%" }}
+              />
+            ) : (
+              <SandpackPreview
+                style={{ height: "100%", backgroundColor: "white" }}
+                showNavigator={true}
+                showRefreshButton={true}
+              />
+            )}
           </div>
         </div>
       </SandpackProvider>
     </div>
-  );
-};
-
-interface ViewPanelsProps {
-  activeView: "code" | "preview";
-}
-
-const ViewPanels = ({ activeView }: ViewPanelsProps) => {
-  return (
-    <>
-      <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          activeView === "code" ? "opacity-100 z-10" : "opacity-0 z-0"
-        }`}
-      >
-        <SandpackCodeEditor
-          showLineNumbers={true}
-          showInlineErrors={true}
-          wrapContent={true}
-          closableTabs={false}
-        />
-      </div>
-      <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          activeView === "preview" ? "opacity-100 z-10" : "opacity-0 z-0"
-        }`}
-      >
-        <SandpackPreview
-          style={{ height: "100%" }}
-          showNavigator={true}
-          showRefreshButton={true}
-        />
-      </div>
-    </>
   );
 };
 
