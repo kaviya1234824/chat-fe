@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { TypingAnimation } from '@/components/magicui/typing-animation';
 
 export interface Message {
   text: string;
@@ -93,7 +94,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
-              <div>{message.text}</div>
+              <div><TypingAnimation> {message.text}</TypingAnimation></div>
               {message.code && (
                 <pre className="mt-2 p-2 bg-gray-800 text-white rounded overflow-x-auto">
                   <code>{message.code}</code>

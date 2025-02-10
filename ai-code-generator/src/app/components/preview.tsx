@@ -193,7 +193,8 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           {activeView === "code" ? (
             <div className="flex w-full">
               <div className="w-48 border-r border-gray-700">
-                <SandpackFileExplorer style={{ height: "90vh" }} />
+                <SandpackFileExplorer 
+                style={{ height: "90vh" }} />
               </div>
               <div className="flex-1">
                 <SandpackCodeEditor

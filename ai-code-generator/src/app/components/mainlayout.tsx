@@ -59,7 +59,7 @@ const MainLayout = () => {
           <div className="mt-6">
             <div className="relative w-[500px]">
               <ShineBorder
-              borderWidth={10}
+              borderWidth={5}
               color={'#8D5B57'}
               >
               <textarea
