@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ArrowRight } from 'lucide-react';
 import ChatSection, { Message } from './chat';
 import PreviewSection from './preview';
+import { ShineBorder } from '@/components/magicui/shine-border';
 
 interface ProjectData {
   code: any;
@@ -57,6 +58,10 @@ const MainLayout = () => {
           </p>
           <div className="mt-6">
             <div className="relative w-[500px]">
+              <ShineBorder
+              borderWidth={10}
+              color={'#8D5B57'}
+              >
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -64,6 +69,7 @@ const MainLayout = () => {
                 className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
                 disabled={isLoading}
               />
+              </ShineBorder>
               {input.trim().length > 0 && (
                 <button
                   onClick={handleGenerate}

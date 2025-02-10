@@ -74,7 +74,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
         <h2 className="font-bold text-white">Chat</h2>
         <button
           onClick={handleNewChat}
-          className="px-2 py-1 h-8 bg-[#5565E8] text-centre text-white text-sm rounded hover:bg-[#3E4DB2] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-2 py-1 h-8 bg-[#673AB7] text-centre text-white text-sm rounded hover:bg-[#5D34A5] focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           New Chat
         </button>
@@ -89,7 +89,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
             <div
               className={`p-3 rounded-lg ${
                 message.sender === 'user'
-                  ? 'bg-[#5565E8] text-white ml-auto max-w-sm'
+                  ? 'bg-[#673AB7] text-white ml-auto max-w-sm'
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
@@ -111,13 +111,13 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter your prompt..."
-            className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-4 py-2 bg-[#5565E8] text-white rounded hover:bg-[#3E4DB2] focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 ${
+            className={`px-4 py-2 bg-[#673AB7] text-white rounded hover:bg-[#5D34A5] focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 ${
               isLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
