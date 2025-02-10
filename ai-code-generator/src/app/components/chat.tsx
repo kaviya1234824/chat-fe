@@ -38,7 +38,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
 
         if (response.data.success) {
           const responseData = response.data.data;
-          const projectCode = responseData.code; // JSON folder structure
+          const projectCode = responseData.code;
           const framework = responseData.framework || '';
           const otherResponse = responseData.otherRespsonse
 
@@ -70,12 +70,11 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
 
   return (
     <div className="w-1/2 flex flex-col border-r border-gray-200">
-      {/* New Chat Button */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
         <h2 className="font-bold">Chat</h2>
         <button
           onClick={handleNewChat}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           New Chat
         </button>

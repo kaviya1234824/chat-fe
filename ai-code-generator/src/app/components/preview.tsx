@@ -33,15 +33,11 @@ interface PreviewSectionProps {
   data: ProjectData | null;
 }
 
-/**
- * Flattens a nested file structure into a single object with paths
- * starting with a slash.
- */
+
 const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
   let result: SandpackFiles = {};
   for (const key in files) {
     const value = files[key];
-    // Prepend a leading slash at the root level.
     const path = prefix ? `${prefix}/${key}` : `/${key}`;
     if (typeof value === "string") {
       result[path] = value;
@@ -52,9 +48,6 @@ const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
   return result;
 };
 
-/**
- * Checks common candidates for an entry file.
- */
 const getEntryFile = (files: SandpackFiles, template: string): string => {
   const candidates = [
     "/index.js",
@@ -71,7 +64,6 @@ const getEntryFile = (files: SandpackFiles, template: string): string => {
       return candidate;
     }
   }
-  // Fallback to a default index file name.
   return template.includes("ts") ? "/index.tsx" : "/index.js";
 };
 
@@ -79,7 +71,6 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
 
-  // Determine the template (default to "react")
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
@@ -89,11 +80,9 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
 
   useEffect(() => {
     if (data && data.code) {
-      // Flatten and normalize the file structure.
       const flattened = flattenFiles(data.code);
       console.log("Flattened files:", flattened);
 
-      // Ensure an entry file exists.
       const entryCandidates = [
         "/index.js",
         "/index.tsx",
@@ -116,7 +105,6 @@ import App from "./App";
 ReactDOM.render(<App />, document.getElementById("root"));`;
       }
 
-      // Ensure an App file exists.
       const appCandidates = [
         "/App.js",
         "/App.tsx",
@@ -131,7 +119,6 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 }`;
       }
 
-      // Ensure a public/index.html exists.
       if (!flattened["/public/index.html"]) {
         flattened["/public/index.html"] = `<!DOCTYPE html>
 <html lang="en">
@@ -146,7 +133,6 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 </html>`;
       }
 
-      // If src/index.js imports "./index.css", add it if missing.
       if (!flattened["/src/index.css"]) {
         flattened["/src/index.css"] = "/* default index css */";
       }
@@ -169,7 +155,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
       </div>
 
       <SandpackProvider
-        key={JSON.stringify(files)} // Reinitialize Sandpack on files change.
+        key={JSON.stringify(files)}
         theme={nightOwl}
         template={template}
         files={files}
@@ -184,7 +170,6 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           },
         }}
       >
-        {/* Toggle Buttons */}
         <div className="p-2 bg-gray-800 border-b border-gray-700">
           <LayoutGroup>
             {(["code", "preview"] as const).map((view) => (
@@ -201,7 +186,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           </LayoutGroup>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex h-screen overflow-hidden">
           <div className="w-48 border-r border-gray-700">
             <SandpackFileExplorer />
           </div>
@@ -212,11 +197,11 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
                 showInlineErrors={true}
                 wrapContent={true}
                 closableTabs={false}
-                style={{ height: "100%" }}
+                style={{ height: "90%" }}
               />
             ) : (
               <SandpackPreview
-                style={{ height: "100%", backgroundColor: "white" }}
+                style={{ height: "90%", backgroundColor: "white" }}
                 showNavigator={true}
                 showRefreshButton={true}
               />

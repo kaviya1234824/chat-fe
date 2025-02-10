@@ -29,7 +29,7 @@ const MainLayout = () => {
         const responseData = response.data.data;
         const projectCode = responseData.code;
         const framework = responseData.framework || '';
-        const otherResponse = responseData.otherResponse; // Fixed typo
+        const otherResponse = responseData.otherResponse;
 
         const msgs: Message[] = [
           { text: input, sender: 'user' },
