@@ -69,18 +69,18 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
   };
 
   return (
-    <div className="w-1/2 flex flex-col border-r border-gray-200">
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-        <h2 className="font-bold">Chat</h2>
+    <div className="w-1/2 flex flex-col border-r border-gray-700 bg-[#011627]">
+      <div className="p-1.5 border-b border-gray-700 bg-[#1E2D3D] flex justify-between items-center">
+        <h2 className="font-bold text-white">Chat</h2>
         <button
           onClick={handleNewChat}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-2 py-1 h-8 bg-[#5565E8] text-centre text-white text-sm rounded hover:bg-[#3E4DB2] focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           New Chat
         </button>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+      <div className="flex-1 p-4 overflow-y-auto bg-[#011221]">
         {messages.map((message, index) => (
           <div
             key={index}
@@ -89,8 +89,8 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
             <div
               className={`p-3 rounded-lg ${
                 message.sender === 'user'
-                  ? 'bg-blue-500 text-black ml-auto max-w-sm'
-                  : 'bg-gray-200 max-w-full w-full'
+                  ? 'bg-[#5565E8] text-white ml-auto max-w-sm'
+                  : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
               <div>{message.text}</div>
@@ -104,20 +104,20 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter your prompt..."
-            className="flex-1 p-2 border text-black border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-4 py-2 bg-blue-500 text-black rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 ${
+            className={`px-4 py-2 bg-[#5565E8] text-white rounded hover:bg-[#3E4DB2] focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 ${
               isLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >

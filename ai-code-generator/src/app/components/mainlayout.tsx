@@ -84,9 +84,6 @@ const MainLayout = () => {
         </div>
       ) : (
         <div className="h-screen flex flex-col overflow-hidden">
-          <header className="bg-gray-800 text-white p-4">
-            <h1 className="text-xl font-bold">AI Code Generator</h1>
-          </header>
           <div className="flex-1 flex overflow-hidden">
             <ChatSection
               onCodeUpdate={setProject}

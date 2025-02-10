@@ -33,7 +33,6 @@ interface PreviewSectionProps {
   data: ProjectData | null;
 }
 
-
 const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
   let result: SandpackFiles = {};
   for (const key in files) {
@@ -89,9 +88,13 @@ const PreviewSection = ({ data }: PreviewSectionProps) => {
         "/src/index.js",
         "/src/index.tsx",
       ];
-      const hasEntry = entryCandidates.some((candidate) => flattened[candidate]);
+      const hasEntry = entryCandidates.some(
+        (candidate) => flattened[candidate]
+      );
       if (!hasEntry) {
-        const defaultEntry = template.includes("ts") ? "/index.tsx" : "/index.js";
+        const defaultEntry = template.includes("ts")
+          ? "/index.tsx"
+          : "/index.js";
         flattened[defaultEntry] = template.includes("ts")
           ? `import React from "react";
 import ReactDOM from "react-dom";
@@ -145,14 +148,14 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 
   return (
     <div className="w-full bg-gray-900 flex flex-col h-screen">
-      <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+      {/* <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
         <h2 className="text-white text-lg">Code</h2>
         {data && data.framework && (
           <span className="text-gray-300 capitalize">
             Framework: {data.framework}
           </span>
         )}
-      </div>
+      </div> */}
 
       <SandpackProvider
         key={JSON.stringify(files)}
@@ -187,26 +190,32 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         </div>
 
         <div className="flex-1 flex h-screen overflow-hidden">
-          <div className="w-48 border-r border-gray-700">
-            <SandpackFileExplorer />
-          </div>
-          <div className="flex-1">
-            {activeView === "code" ? (
-              <SandpackCodeEditor
-                showLineNumbers={true}
-                showInlineErrors={true}
-                wrapContent={true}
-                closableTabs={false}
-                style={{ height: "90%" }}
-              />
-            ) : (
-              <SandpackPreview
-                style={{ height: "90%", backgroundColor: "white" }}
-                showNavigator={true}
-                showRefreshButton={true}
-              />
-            )}
-          </div>
+          {activeView === "code" ? (
+            <div className="flex w-full">
+              <div className="w-48 border-r border-gray-700">
+                <SandpackFileExplorer style={{ height: "90vh" }} />
+              </div>
+              <div className="flex-1">
+                <SandpackCodeEditor
+                  showLineNumbers={true}
+                  showInlineErrors={true}
+                  wrapContent={true}
+                  closableTabs={false}
+                  style={{ height: "90vh" }}
+                />
+              </div>
+            </div>
+          ) : (
+            <SandpackPreview
+              style={{
+                height: "100vh",
+                backgroundColor: "white",
+                width: "100%",
+              }}
+              showNavigator={true}
+              showRefreshButton={true}
+            />
+          )}
         </div>
       </SandpackProvider>
     </div>
