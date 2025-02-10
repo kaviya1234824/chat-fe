@@ -31,6 +31,8 @@ interface ProjectData {
 
 interface PreviewSectionProps {
   data: ProjectData | null;
+  // New optional prop to indicate if code generation is in progress
+  isGenerating?: boolean;
 }
 
 const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
@@ -66,7 +68,7 @@ const getEntryFile = (files: SandpackFiles, template: string): string => {
   return template.includes("ts") ? "/index.tsx" : "/index.js";
 };
 
-const PreviewSection = ({ data }: PreviewSectionProps) => {
+const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
 
@@ -147,16 +149,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
   }, [data, template]);
 
   return (
-    <div className="w-full bg-gray-900 flex flex-col h-screen">
-      {/* <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-        <h2 className="text-white text-lg">Code</h2>
-        {data && data.framework && (
-          <span className="text-gray-300 capitalize">
-            Framework: {data.framework}
-          </span>
-        )}
-      </div> */}
-
+    <div className="relative w-full bg-gray-900 flex flex-col h-screen">
       <SandpackProvider
         key={JSON.stringify(files)}
         theme={nightOwl}
@@ -217,6 +210,15 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
             />
           )}
         </div>
+        {/* {isGenerating && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white"></div>
+          </div>
+        )} */}
+
+{isGenerating && (
+<div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-lg z-50"> 
+  <div className="text-white text-3xl font-extrabold"> Generating response... </div> </div> )}
       </SandpackProvider>
     </div>
   );

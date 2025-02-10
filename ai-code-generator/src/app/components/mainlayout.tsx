@@ -19,6 +19,8 @@ const MainLayout = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSplitScreen, setShowSplitScreen] = useState(false);
+  // New state to control the loader overlay on the Sandpack module
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
@@ -48,6 +50,13 @@ const MainLayout = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevents new line in textarea
+      handleGenerate();
+    }
+  };
+
   return (
     <div className="relative h-screen">
       {!showSplitScreen ? (
@@ -58,17 +67,15 @@ const MainLayout = () => {
           </p>
           <div className="mt-6">
             <div className="relative w-[500px]">
-              <ShineBorder
-              borderWidth={10}
-              color={'#8D5B57'}
-              >
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Enter your prompt..."
-                className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
-                disabled={isLoading}
-              />
+              <ShineBorder borderWidth={10} color={'#8D5B57'}>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter your prompt..."
+                  className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
+                  disabled={isLoading}
+                />
               </ShineBorder>
               {input.trim().length > 0 && (
                 <button
@@ -91,11 +98,14 @@ const MainLayout = () => {
       ) : (
         <div className="h-screen flex flex-col overflow-hidden">
           <div className="flex-1 flex overflow-hidden">
-            <ChatSection
-              onCodeUpdate={setProject}
-              initialMessages={initialMessages}
+            {/* Pass down the loader state setter to ChatSection */}
+            <ChatSection 
+              onCodeUpdate={setProject} 
+              initialMessages={initialMessages} 
+              onLoadingChange={setIsGenerating} 
             />
-            <PreviewSection data={project} />
+            {/* Pass the current generation state to PreviewSection */}
+            <PreviewSection data={project} isGenerating={isGenerating} />
           </div>
         </div>
       )}

@@ -10,11 +10,13 @@ export interface Message {
 interface ChatSectionProps {
   onCodeUpdate: (project: { code: any; framework: string } | null) => void;
   initialMessages?: Message[];
+  // New optional prop to report loading status to the parent
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 const api = axios.create({ baseURL: 'http://localhost:3000/api/' });
 
-const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => {
+const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: ChatSectionProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +30,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
     e.preventDefault();
     if (input.trim()) {
       setIsLoading(true);
+      onLoadingChange && onLoadingChange(true);
 
       setMessages((prev) => [...prev, { text: input, sender: 'user' }]);
 
@@ -40,7 +43,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
           const responseData = response.data.data;
           const projectCode = responseData.code;
           const framework = responseData.framework || '';
-          const otherResponse = responseData.otherRespsonse
+          const otherResponse = responseData.otherRespsonse;
 
           setMessages((prev) => [
             ...prev,
@@ -63,6 +66,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
         ]);
       } finally {
         setIsLoading(false);
+        onLoadingChange && onLoadingChange(false);
         setInput('');
       }
     }
@@ -80,7 +84,7 @@ const ChatSection = ({ onCodeUpdate , initialMessages=[]}: ChatSectionProps) => 
         </button>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto bg-[#011221]">
+      <div className="flex-1 p-4 overflow-y-auto bg-[#010508]">
         {messages.map((message, index) => (
           <div
             key={index}
