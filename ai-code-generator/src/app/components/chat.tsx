@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
+import { CameraIcon } from 'lucide-react';
 
 export interface Message {
   text: string;
@@ -44,7 +45,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
           const responseData = response.data.data;
           const projectCode = responseData.code;
           const framework = responseData.framework || '';
-          const otherResponse = responseData.otherRespsonse;
+          const otherResponse = responseData.otherResponse;
 
           setMessages((prev) => [
             ...prev,
@@ -121,12 +122,11 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
-          {/* New Image Upload Button */}  
           <label
             htmlFor="imageUpload"
-            className="px-3 py-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-500"
+            className="flex justify-centre w-10 text-sm bg-[#673AB7]  text-white rounded cursor-pointer hover:bg-[#5D34A5] "
           >
-            Upload Image
+            <CameraIcon className='ml-2 mr-2 h-10 w-6' />
           </label>
           <input
             id="imageUpload"
@@ -164,7 +164,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                     const responseData = response.data.data;
                     const projectCode = responseData.code;
                     const framework = responseData.framework || '';
-                    const otherResponse = responseData.otherRespsonse;
+                    const otherResponse = responseData.otherResponse;
 
                     setMessages((prev) => [
                       ...prev,
