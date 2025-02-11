@@ -98,7 +98,9 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
-              <div><TypingAnimation> {message.text}</TypingAnimation></div>
+              <div>
+                <TypingAnimation>{message.text}</TypingAnimation>
+              </div>
               {message.code && (
                 <pre className="mt-2 p-2 bg-gray-800 text-white rounded overflow-x-auto">
                   <code>{message.code}</code>
@@ -110,7 +112,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="text"
             value={input}
@@ -118,6 +120,80 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             placeholder="Enter your prompt..."
             className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
+          />
+          {/* New Image Upload Button */}  
+          <label
+            htmlFor="imageUpload"
+            className="px-3 py-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-500"
+          >
+            Upload Image
+          </label>
+          <input
+            id="imageUpload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                // Convert image to base64
+                const toBase64 = (file: File): Promise<string> => {
+                  return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = (error) => reject(error);
+                  });
+                };
+                try {
+                  const base64Image = await toBase64(file);
+                  // Optionally, add a temporary message indicating the image is being processed
+                  setMessages((prev) => [
+                    ...prev,
+                    { text: 'Uploading image...', sender: 'user' },
+                  ]);
+
+                  setIsLoading(true);
+                  onLoadingChange && onLoadingChange(true);
+
+                  const response = await api.post('agent-model/generateCode-image', {
+                    imageURL: base64Image,
+                  });
+
+                  if (response.data.success) {
+                    const responseData = response.data.data;
+                    const projectCode = responseData.code;
+                    const framework = responseData.framework || '';
+                    const otherResponse = responseData.otherRespsonse;
+
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        text: otherResponse,
+                        sender: 'assistant',
+                        code: projectCode,
+                      },
+                    ]);
+
+                    onCodeUpdate({ code: projectCode, framework });
+                  } else {
+                    setMessages((prev) => [
+                      ...prev,
+                      { text: "Error generating code from image.", sender: 'assistant' },
+                    ]);
+                  }
+                } catch (error) {
+                  console.error('Error processing image upload:', error);
+                  setMessages((prev) => [
+                    ...prev,
+                    { text: "Error uploading image. Please try again.", sender: 'assistant' },
+                  ]);
+                } finally {
+                  setIsLoading(false);
+                  onLoadingChange && onLoadingChange(false);
+                }
+              }
+            }}
           />
           <button
             type="submit"
