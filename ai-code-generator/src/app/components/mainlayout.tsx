@@ -77,6 +77,7 @@ const MainLayout = () => {
                 placeholder="Enter your prompt..."
                 className="w-[500px] p-3 h-[150px] rounded-md bg-gray-900 border border-gray-700 text-white"
                 disabled={isLoading}
+                onKeyDown={handleKeyDown}
               />
               </ShineBorder>
               {input.trim().length > 0 && (

@@ -16,7 +16,7 @@ interface TypingAnimationProps extends MotionProps {
 export function TypingAnimation({
   children,
   className,
-  duration = 100,
+  duration = 30,
   delay = 0,
   as: Component = "div",
   startOnView = false,
@@ -30,9 +30,10 @@ export function TypingAnimation({
   const [displayedText, setDisplayedText] = useState<string>("");
   const [started, setStarted] = useState(false);
   const elementRef = useRef<HTMLElement | null>(null);
+  const animationCompletedRef = useRef(false)
 
   useEffect(() => {
-    if (!startOnView) {
+    if (!startOnView && !animationCompletedRef.current) {
       const startTimeout = setTimeout(() => {
         setStarted(true);
       }, delay);
@@ -59,7 +60,7 @@ export function TypingAnimation({
   }, [delay, startOnView]);
 
   useEffect(() => {
-    if (!started) return;
+    if (!started || animationCompletedRef.current) return;
 
     let i = 0;
     const typingEffect = setInterval(() => {
@@ -68,6 +69,7 @@ export function TypingAnimation({
         i++;
       } else {
         clearInterval(typingEffect);
+        animationCompletedRef.current = true
       }
     }, duration);
 
