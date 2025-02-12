@@ -31,7 +31,6 @@ interface ProjectData {
 
 interface PreviewSectionProps {
   data: ProjectData | null;
-  // New optional prop to indicate if code generation is in progress
   isGenerating?: boolean;
 }
 
@@ -75,7 +74,7 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
-        ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
+      ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
         : "react"
       : "react";
 
@@ -211,15 +210,13 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
             />
           )}
         </div>
-        {/* {isGenerating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white"></div>
+        {isGenerating && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-50">
+            <div className="text-white text-xl font-normal">
+              Generating response...
+            </div>
           </div>
-        )} */}
-
-{isGenerating && (
-<div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-lg z-50"> 
-  <div className="text-white text-3xl font-extrabold"> Generating response... </div> </div> )}
+        )}
       </SandpackProvider>
     </div>
   );

@@ -19,7 +19,6 @@ const MainLayout = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSplitScreen, setShowSplitScreen] = useState(false);
-  // New state to control the loader overlay on the Sandpack module
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -101,13 +100,11 @@ const MainLayout = () => {
       ) : (
         <div className="h-screen flex flex-col overflow-hidden">
           <div className="flex-1 flex overflow-hidden">
-            {/* Pass down the loader state setter to ChatSection */}
             <ChatSection 
               onCodeUpdate={setProject} 
               initialMessages={initialMessages} 
               onLoadingChange={setIsGenerating} 
             />
-            {/* Pass the current generation state to PreviewSection */}
             <PreviewSection data={project} isGenerating={isGenerating} />
           </div>
         </div>
