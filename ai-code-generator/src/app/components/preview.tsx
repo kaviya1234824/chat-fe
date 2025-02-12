@@ -130,6 +130,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>React App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -158,6 +159,9 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         options={{
           recompileMode: "delayed",
           recompileDelay: 500,
+          externalResources: [
+            "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+          ],
           classes: {
             "sp-layout": "!bg-gray-900",
             "sp-file-explorer": "!bg-gray-900 !border-gray-700",
@@ -185,8 +189,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           {activeView === "code" ? (
             <div className="flex w-full">
               <div className="w-48 border-r border-gray-700">
-                <SandpackFileExplorer 
-                style={{ height: "90vh" }} />
+                <SandpackFileExplorer style={{ height: "90vh" }} />
               </div>
               <div className="flex-1">
                 <SandpackCodeEditor
