@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
-import { CameraIcon } from 'lucide-react';
+import { CameraIcon, X } from 'lucide-react';
 
 export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   code?: string;
+  image?: string; // Add an optional image property for uploaded images
 }
 
 interface ChatSectionProps {
   onCodeUpdate: (project: { code: any; framework: string } | null) => void;
   initialMessages?: Message[];
-  // New optional prop to report loading status to the parent
   onLoadingChange?: (loading: boolean) => void;
 }
 
@@ -22,6 +22,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const handleNewChat = () => {
     setMessages([]);
@@ -34,13 +35,18 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       setIsLoading(true);
       onLoadingChange && onLoadingChange(true);
 
-      setMessages((prev) => [...prev, { text: input, sender: 'user' }]);
+      // Add the user's prompt and optionally the uploaded image to the chat
+      setMessages((prev) => [
+        ...prev,
+        
+      ]);
 
       try {
+        // Send both the prompt and the optionally uploaded image
         const response = await api.post('agent-model/generate', {
           prompt: input,
+          imageURl: uploadedImage || undefined,
         });
-
         if (response.data.success) {
           const responseData = response.data.data;
           const projectCode = responseData.code;
@@ -49,12 +55,8 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
 
           setMessages((prev) => [
             ...prev,
-            {
-              text: otherResponse,
-              sender: 'assistant',
-            },
+            { text: otherResponse, sender: 'assistant' },
           ]);
-
           onCodeUpdate({ code: projectCode, framework });
         }
       } catch (error) {
@@ -70,6 +72,8 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
         setIsLoading(false);
         onLoadingChange && onLoadingChange(false);
         setInput('');
+        // Optionally clear the image after sending
+        setUploadedImage(null);
       }
     }
   };
@@ -85,7 +89,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
           New Chat
         </button>
       </div>
-
       <div className="flex-1 p-4 overflow-y-auto bg-[#010508]">
         {messages.map((message, index) => (
           <div
@@ -99,6 +102,31 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
+              {/* Display the uploaded image */}
+              {message.image && (
+                <div className="relative mb-2">
+                  <img
+                    src={message.image}
+                    alt="Uploaded"
+                    className="w-24 h-24 object-cover rounded-md"
+                  />
+                  {message.sender === 'user' && (
+                    <button
+                      onClick={() => {
+                        // Remove the image from the messages
+                        setMessages((prev) =>
+                          prev.map((msg, i) =>
+                            i === index ? { ...msg, image: undefined } : msg
+                          )
+                        );
+                      }}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
               <div>
                 <TypingAnimation>{message.text}</TypingAnimation>
               </div>
@@ -111,7 +139,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
           </div>
         ))}
       </div>
-
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
         <div className="flex gap-2 items-center">
           <input
@@ -124,9 +151,9 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
           />
           <label
             htmlFor="imageUpload"
-            className="flex justify-centre w-10 text-sm bg-[#673AB7]  text-white rounded cursor-pointer hover:bg-[#5D34A5] "
+            className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
           >
-            <CameraIcon className='ml-2 mr-2 h-10 w-6' />
+            <CameraIcon className="ml-2 mr-2 h-10 w-6" />
           </label>
           <input
             id="imageUpload"
@@ -147,50 +174,25 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                 };
                 try {
                   const base64Image = await toBase64(file);
-                  // Optionally, add a temporary message indicating the image is being processed
                   setMessages((prev) => [
                     ...prev,
-                    { text: 'Uploading image...', sender: 'user' },
+                    {
+                      text: 'Image uploaded. It will be used as a visual reference.',
+                      sender: 'user',
+                      image: base64Image,
+                    },
                   ]);
-
-                  setIsLoading(true);
-                  onLoadingChange && onLoadingChange(true);
-
-                  const response = await api.post('agent-model/generateCode-image', {
-                    imageURL: base64Image,
-                  });
-
-                  if (response.data.success) {
-                    const responseData = response.data.data;
-                    const projectCode = responseData.code;
-                    const framework = responseData.framework || '';
-                    const otherResponse = responseData.otherResponse;
-
-                    setMessages((prev) => [
-                      ...prev,
-                      {
-                        text: otherResponse,
-                        sender: 'assistant',
-                        code: projectCode,
-                      },
-                    ]);
-
-                    onCodeUpdate({ code: projectCode, framework });
-                  } else {
-                    setMessages((prev) => [
-                      ...prev,
-                      { text: "Error generating code from image.", sender: 'assistant' },
-                    ]);
-                  }
+                  // Store the image for later submission with the prompt
+                  setUploadedImage(base64Image);
                 } catch (error) {
                   console.error('Error processing image upload:', error);
                   setMessages((prev) => [
                     ...prev,
-                    { text: "Error uploading image. Please try again.", sender: 'assistant' },
+                    {
+                      text: "Error uploading image. Please try again.",
+                      sender: 'assistant',
+                    },
                   ]);
-                } finally {
-                  setIsLoading(false);
-                  onLoadingChange && onLoadingChange(false);
                 }
               }
             }}

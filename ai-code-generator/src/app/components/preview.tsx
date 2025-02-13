@@ -8,6 +8,10 @@ import {
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
+import * as shadcnComponents from "@/lib/shadcn";
+import  dedent from "dedent"
+
+
 
 const allowedTemplates = [
   "react",
@@ -155,12 +159,21 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         theme={nightOwl}
         template={template}
         files={files}
-        customSetup={{ entry: getEntryFile(files, template) }}
+        customSetup={{ entry: getEntryFile(files, template),
+
+          dependencies: {
+            "lucide-react": "latest",
+            
+
+          },
+
+         }}
         options={{
-          recompileMode: "delayed",
-          recompileDelay: 500,
+          // recompileMode: "delayed",
+          // recompileDelay: 500,
           externalResources: [
             "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+
           ],
           classes: {
             "sp-layout": "!bg-gray-900",
@@ -226,3 +239,6 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 };
 
 export default PreviewSection;
+
+
+
