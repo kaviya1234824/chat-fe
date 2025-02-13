@@ -13,6 +13,9 @@ import  dedent from "dedent"
 
 
 
+
+
+
 const allowedTemplates = [
   "react",
   "react-ts",
@@ -163,6 +166,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
 
           dependencies: {
             "lucide-react": "latest",
+            recharts: "2.9.0",
             
 
           },
