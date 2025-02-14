@@ -1,10 +1,11 @@
-'use client'
-import React, { useState } from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ArrowRight } from 'lucide-react';
 import ChatSection, { Message } from './chat';
 import PreviewSection from './preview';
 import { ShineBorder } from '@/components/magicui/shine-border';
+import { useChatHistory } from '@/persistence/useChatHistory';
 
 interface ProjectData {
   code: any;
@@ -21,34 +22,48 @@ const MainLayout = () => {
   const [showSplitScreen, setShowSplitScreen] = useState(false);
   // New state to control the loader overlay on the Sandpack module
   const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const { saveMessage, getChatHistory } = useChatHistory();
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
 
     setIsLoading(true);
+  
+    // Save user query
+    const userMessage : Message= { text: input, sender: "user" };
+    setInitialMessages((prev) => [...prev, userMessage]);
+    await saveMessage(userMessage);  // Store user query in IndexedDB
+  
     try {
-      const response = await api.post('agent-model/generate', { prompt: input });
+      const response = await api.post("agent-model/generate", {
+        prompt: input,
+        imageURL: uploadedImage || undefined,
+      });
+  
       if (response.data.success) {
         const responseData = response.data.data;
-        const projectCode = responseData.code;
-        const framework = responseData.framework || '';
-        const otherResponse = responseData.otherResponse;
-
-        const msgs: Message[] = [
-          { text: input, sender: 'user' },
-          { text: otherResponse, sender: 'assistant' },
-        ];
-        setInitialMessages(msgs);
-        setProject({ code: projectCode, framework });
+        const systemMessage : Message = { text: responseData.otherResponse, sender: "assistant" };
+  
+        setInitialMessages((prev) => [...prev, systemMessage]);
+        await saveMessage(systemMessage);  // Store system response in IndexedDB
+  
+        setProject({ code: responseData.code, framework: responseData.framework || "" });
         setShowSplitScreen(true);
       }
     } catch (error) {
-      console.error('Error generating code:', error);
+      console.error("Error generating code:", error);
+      const errorMessage : Message = { text: "Error generating code.", sender: "assistant" };
+  
+      setInitialMessages((prev) => [...prev, errorMessage]);
+      await saveMessage(errorMessage);  // Store error message in IndexedDB
     } finally {
       setIsLoading(false);
-      setInput('');
+      setInput("");
+      setUploadedImage(null);
     }
   };
+  
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -56,6 +71,14 @@ const MainLayout = () => {
       handleGenerate();
     }
   };
+  useEffect(() => {
+    const loadHistory = async () => {
+      const history = await getChatHistory();
+      setInitialMessages(history);
+    };
+    loadHistory();
+  }, []);
+  
 
   return (
     <div className="relative h-screen">

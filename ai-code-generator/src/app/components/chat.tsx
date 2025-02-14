@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
 import { CameraIcon } from 'lucide-react';
@@ -73,7 +73,10 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       }
     }
   };
-
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
+  
   return (
     <div className="w-1/2 flex flex-col border-r border-gray-700 bg-[#011627]">
       <div className="p-1.5 border-b border-gray-700 bg-[#1E2D3D] flex justify-between items-center">
