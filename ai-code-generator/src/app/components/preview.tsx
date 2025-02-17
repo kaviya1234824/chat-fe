@@ -5,6 +5,7 @@ import {
   SandpackPreview,
   SandpackFileExplorer,
   SandpackPredefinedTemplate,
+  UnstyledOpenInCodeSandboxButton,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
@@ -165,9 +166,10 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         customSetup={{ entry: getEntryFile(files, template),
 
           dependencies: {
-            "lucide-react": "latest",
+            // "lucide-react": "latest",
             recharts: "2.9.0",
-            
+            "react-router-dom": "5.3.0",
+         
 
           },
 
@@ -175,6 +177,8 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         options={{
           // recompileMode: "delayed",
           // recompileDelay: 500,
+          autorun: true,
+          autoReload: true,
           externalResources: [
             "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
 
@@ -237,7 +241,13 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
             </div>
           </div>
         )}
+
+    <UnstyledOpenInCodeSandboxButton>
+      Open in CodeSandbox
+    </UnstyledOpenInCodeSandboxButton>
       </SandpackProvider>
+
+
     </div>
   );
 };
