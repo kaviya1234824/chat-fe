@@ -73,7 +73,7 @@ const MainLayout = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Prevents new line in textarea
+      e.preventDefault();
       handleGenerate();
     }
   };

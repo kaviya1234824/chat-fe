@@ -7,7 +7,7 @@ export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   code?: string;
-  image?: string; // Add an optional image property for uploaded images
+  image?: string;
 }
 
 interface ChatSectionProps {
@@ -141,12 +141,11 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       </div>
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
         <div className="flex gap-2 items-center">
-          <input
-            type="text"
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter your prompt..."
-            className="flex-1 p-2 border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
+            className="flex-1 p-2 h-10 scrollbar-hidden border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
           <label
