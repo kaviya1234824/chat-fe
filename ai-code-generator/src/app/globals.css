@@ -33,6 +33,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --editor-bg: 222 47% 11%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -69,4 +70,71 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.editor-container {
+  @apply h-screen flex flex-col bg-[hsl(var(--editor-bg))];
+}
+
+.preview-container {
+  @apply relative flex-1 overflow-hidden;
+  background: radial-gradient(circle at center,
+    hsl(222, 47%, 11%) 0%,
+    hsl(222, 47%, 8%) 100%
+  );
+}
+
+.property-panel {
+  @apply fixed right-0 top-0 h-screen w-80 bg-card/80 backdrop-blur-xl border-l border-border/50 p-4;
+  animation: slideIn 0.3s ease-out;
+}
+
+.inspector-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.inspector-highlight {
+  position: fixed;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.1);
+  transition: all 200ms;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.toolbar {
+  @apply flex items-center gap-2 p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl;
+}
+
+.property-input {
+  @apply bg-background/50 border border-border/50 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-ring;
+}
+.property-group {
+  @apply mb-4;
+}
+.property-label {
+  @apply text-sm text-muted-foreground mb-1;
+}
+
+.sp-preview-iframe {
+  height: 100% !important;
+  width: 100% !important;
+  border: none !important;
+}
+
+.sp-preview-container {
+  height: 100% !important;
+  width: 100% !important;
 }

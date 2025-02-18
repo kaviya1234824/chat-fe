@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
 import { CameraIcon, PenIcon, X } from 'lucide-react';
-import EditPopup from './edit';
+// import EditPopup from './edit';
 import { Button} from "@/components/ui/button";
 
 
@@ -147,13 +147,13 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             className="flex-1 p-2 h-10 scrollbar-hidden border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
-          <Button
+          {/* <Button
             onClick={() => setIsEditOpen(true)}
             className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
           >
             <PenIcon className='h-5 w-5'/>
           </Button>
-          {isEditOpen && <EditPopup onClose={() => setIsEditOpen(false)} />}
+          {isEditOpen && <EditPopup onClose={() => setIsEditOpen(false)} />} */}
           <label
             htmlFor="imageUpload"
             className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"

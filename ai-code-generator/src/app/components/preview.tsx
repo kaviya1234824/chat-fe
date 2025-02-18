@@ -6,16 +6,13 @@ import {
   SandpackFileExplorer,
   SandpackPredefinedTemplate,
   UnstyledOpenInCodeSandboxButton,
+  useSandpack,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
 import * as shadcnComponents from "@/lib/shadcn";
 import  dedent from "dedent"
-
-
-
-
-
+import Editor from './editor';
 
 const allowedTemplates = [
   "react",
@@ -156,99 +153,136 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     }
   }, [data, template]);
 
+  const CustomPreview = () => {
+    const { listen } = useSandpack();
+    
+    useEffect(() => {
+      const unsubscribe = listen((msg) => {
+        if (msg.type === "start") {
+          setTimeout(() => {
+            const preview = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+            if (preview) {
+              preview.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms');
+              preview.style.width = '100%';
+              preview.style.height = '100%';
+              preview.style.border = 'none';
+            }
+          }, 1000);
+        }
+      });
+
+      return () => unsubscribe();
+    }, [listen]);
+
+    return (
+      <div className="w-full h-full">
+        <SandpackPreview
+          style={{
+            height: '100%',
+            width: '100%',
+            border: 'none',
+            margin: 0,
+            padding: 0,
+            overflow: 'hidden'
+          }}
+          showNavigator={false}
+          showRefreshButton={false}
+        />
+      </div>
+    );
+  };
+
   return (
-    <div className="relative w-full bg-gray-900 flex flex-col h-screen">
-      <SandpackProvider
-        key={JSON.stringify(files)}
-        theme={nightOwl}
-        template={template}
-        files={files}
-        customSetup={{ entry: getEntryFile(files, template),
+    <Editor activeView={activeView}>
+      <div className="relative w-full bg-gray-900 flex flex-col h-screen">
+        <SandpackProvider
+          key={JSON.stringify(files)}
+          theme={nightOwl}
+          template={template}
+          files={files}
+          customSetup={{ entry: getEntryFile(files, template),
 
-          dependencies: {
-            // "lucide-react": "latest",
-            recharts: "2.9.0",
-            "react-router-dom": "5.3.0",
-         
+            dependencies: {
+              // "lucide-react": "latest",
+              recharts: "2.9.0",
+              "react-router-dom": "5.3.0",
+           
 
-          },
+            },
 
-         }}
-        options={{
-          // recompileMode: "delayed",
-          // recompileDelay: 500,
-          autorun: true,
-          autoReload: true,
-          externalResources: [
-            "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+           }}
+          options={{
+            // recompileMode: "delayed",
+            // recompileDelay: 500,
+            autorun: true,
+            autoReload: true,
+            externalResources: [
+              "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
 
-          ],
-          classes: {
-            "sp-layout": "!bg-gray-900",
-            "sp-file-explorer": "!bg-gray-900 !border-gray-700",
-            "sp-tab-button": "!bg-gray-800",
-          },
-        }}
-      >
-        <div className="p-2 bg-gray-800 border-b border-gray-700">
-          <LayoutGroup>
-            {(["code", "preview"] as const).map((view) => (
-              <button
-                key={view}
-                onClick={() => setActiveView(view)}
-                className={`relative px-4 py-1 rounded-md text-sm font-medium capitalize ${
-                  activeView === view ? "text-white" : "text-gray-400"
-                }`}
-              >
-                {view}
-              </button>
-            ))}
-          </LayoutGroup>
-        </div>
-
-        <div className="flex-1 flex h-screen overflow-hidden">
-          {activeView === "code" ? (
-            <div className="flex w-full">
-              <div className="w-48 border-r border-gray-700">
-                <SandpackFileExplorer style={{ height: "90vh" }} />
-              </div>
-              <div className="flex-1">
-                <SandpackCodeEditor
-                  showLineNumbers={true}
-                  showInlineErrors={true}
-                  wrapContent={true}
-                  closableTabs={false}
-                  style={{ height: "90vh" }}
-                />
-              </div>
-            </div>
-          ) : (
-            <SandpackPreview
-              style={{
-                height: "100vh",
-                backgroundColor: "white",
-                width: "100%",
-              }}
-              showNavigator={true}
-              showRefreshButton={true}
-            />
-          )}
-        </div>
-        {isGenerating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-50">
-            <div className="text-white text-xl font-normal">
-              Generating response...
-            </div>
+            ],
+            classes: {
+              "sp-layout": "!bg-gray-900",
+              "sp-file-explorer": "!bg-gray-900 !border-gray-700",
+              "sp-tab-button": "!bg-gray-800",
+            },
+            // useQueryString: true,
+            // allowRunOnPreview: true,
+          }}
+        >
+          <div className="p-2 bg-gray-800 border-b border-gray-700">
+            <LayoutGroup>
+              {(["code", "preview"] as const).map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setActiveView(view)}
+                  className={`relative px-4 py-1 rounded-md text-sm font-medium capitalize ${
+                    activeView === view ? "text-white" : "text-gray-400"
+                  }`}
+                >
+                  {view}
+                </button>
+              ))}
+            </LayoutGroup>
           </div>
-        )}
 
-    <UnstyledOpenInCodeSandboxButton>
-      Open in CodeSandbox
-    </UnstyledOpenInCodeSandboxButton>
-      </SandpackProvider>
+          <div className="flex-1 flex h-screen overflow-hidden">
+            {activeView === "code" ? (
+              <div className="flex w-full">
+                <div className="w-48 border-r border-gray-700">
+                  <SandpackFileExplorer style={{ height: "90vh" }} />
+                </div>
+                <div className="flex-1">
+                  <SandpackCodeEditor
+                    showLineNumbers={true}
+                    showInlineErrors={true}
+                    wrapContent={true}
+                    closableTabs={false}
+                    style={{ height: "90vh" }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="w-full h-full relative">
+                <CustomPreview />
+              </div>
+            )}
+          </div>
+          {isGenerating && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-50">
+              <div className="text-white text-xl font-normal">
+                Generating response...
+              </div>
+            </div>
+          )}
+
+      <UnstyledOpenInCodeSandboxButton>
+        Open in CodeSandbox
+      </UnstyledOpenInCodeSandboxButton>
+        </SandpackProvider>
 
 
-    </div>
+      </div>
+    </Editor>
   );
 };
 
