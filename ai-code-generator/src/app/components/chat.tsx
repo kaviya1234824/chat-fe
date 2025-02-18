@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
-import { CameraIcon, X } from 'lucide-react';
+import { CameraIcon, PenIcon, X } from 'lucide-react';
+import EditPopup from './edit';
+import { Button} from "@/components/ui/button";
+
 
 export interface Message {
   text: string;
@@ -23,6 +26,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const handleNewChat = () => {
     setMessages([]);
@@ -35,17 +39,15 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       setIsLoading(true);
       onLoadingChange && onLoadingChange(true);
 
-      // Add the user's prompt and optionally the uploaded image to the chat
       setMessages((prev) => [
         ...prev,
         
       ]);
 
       try {
-        // Send both the prompt and the optionally uploaded image
         const response = await api.post('agent-model/generate', {
           prompt: input,
-          imageURl: uploadedImage || undefined,
+          imageURl: uploadedImage ?? undefined,
         });
         if (response.data.success) {
           const responseData = response.data.data;
@@ -72,7 +74,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
         setIsLoading(false);
         onLoadingChange && onLoadingChange(false);
         setInput('');
-        // Optionally clear the image after sending
         setUploadedImage(null);
       }
     }
@@ -102,7 +103,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
-              {/* Display the uploaded image */}
               {message.image && (
                 <div className="relative mb-2">
                   <img
@@ -113,7 +113,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                   {message.sender === 'user' && (
                     <button
                       onClick={() => {
-                        // Remove the image from the messages
                         setMessages((prev) =>
                           prev.map((msg, i) =>
                             i === index ? { ...msg, image: undefined } : msg
@@ -148,6 +147,13 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             className="flex-1 p-2 h-10 scrollbar-hidden border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
+          <Button
+            onClick={() => setIsEditOpen(true)}
+            className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
+          >
+            <PenIcon className='h-5 w-5'/>
+          </Button>
+          {isEditOpen && <EditPopup onClose={() => setIsEditOpen(false)} />}
           <label
             htmlFor="imageUpload"
             className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
@@ -162,7 +168,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
-                // Convert image to base64
                 const toBase64 = (file: File): Promise<string> => {
                   return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -181,7 +186,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
                       image: base64Image,
                     },
                   ]);
-                  // Store the image for later submission with the prompt
                   setUploadedImage(base64Image);
                 } catch (error) {
                   console.error('Error processing image upload:', error);
