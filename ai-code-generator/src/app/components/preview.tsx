@@ -5,9 +5,17 @@ import {
   SandpackPreview,
   SandpackFileExplorer,
   SandpackPredefinedTemplate,
+  UnstyledOpenInCodeSandboxButton,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
+import * as shadcnComponents from "@/lib/shadcn";
+import  dedent from "dedent"
+
+
+
+
+
 
 const allowedTemplates = [
   "react",
@@ -31,7 +39,6 @@ interface ProjectData {
 
 interface PreviewSectionProps {
   data: ProjectData | null;
-  // New optional prop to indicate if code generation is in progress
   isGenerating?: boolean;
 }
 
@@ -75,7 +82,7 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
-        ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
+      ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
         : "react"
       : "react";
 
@@ -131,6 +138,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>React App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -155,10 +163,26 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         theme={nightOwl}
         template={template}
         files={files}
-        customSetup={{ entry: getEntryFile(files, template) }}
+        customSetup={{ entry: getEntryFile(files, template),
+
+          dependencies: {
+            // "lucide-react": "latest",
+            recharts: "2.9.0",
+            "react-router-dom": "5.3.0",
+         
+
+          },
+
+         }}
         options={{
-          recompileMode: "delayed",
-          recompileDelay: 500,
+          // recompileMode: "delayed",
+          // recompileDelay: 500,
+          autorun: true,
+          autoReload: true,
+          externalResources: [
+            "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+
+          ],
           classes: {
             "sp-layout": "!bg-gray-900",
             "sp-file-explorer": "!bg-gray-900 !border-gray-700",
@@ -186,8 +210,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           {activeView === "code" ? (
             <div className="flex w-full">
               <div className="w-48 border-r border-gray-700">
-                <SandpackFileExplorer 
-                style={{ height: "90vh" }} />
+                <SandpackFileExplorer style={{ height: "90vh" }} />
               </div>
               <div className="flex-1">
                 <SandpackCodeEditor
@@ -211,18 +234,25 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
             />
           )}
         </div>
-        {/* {isGenerating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white"></div>
+        {isGenerating && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-50">
+            <div className="text-white text-xl font-normal">
+              Generating response...
+            </div>
           </div>
-        )} */}
+        )}
 
-{isGenerating && (
-<div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-lg z-50"> 
-  <div className="text-white text-3xl font-extrabold"> Generating response... </div> </div> )}
+    <UnstyledOpenInCodeSandboxButton>
+      Open in CodeSandbox
+    </UnstyledOpenInCodeSandboxButton>
       </SandpackProvider>
+
+
     </div>
   );
 };
 
 export default PreviewSection;
+
+
+
