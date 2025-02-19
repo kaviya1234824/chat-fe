@@ -25,12 +25,23 @@ export const useChatHistory = () => {
     });
   };
 
-  const saveMessage = async (message: { text: string; sender: string }) => {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    store.add({ text: message.text, sender: message.sender, timestamp: Date.now() });
-  };
+const saveMessage = async (message: { text: string; sender: string }): Promise<number> => {
+  return new Promise(async (resolve, reject) => {
+      try {
+          const db = await openDB();
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          const store = tx.objectStore(STORE_NAME);
+          const request = store.add({ text: message.text, sender: message.sender, timestamp: Date.now() });
+
+          request.onsuccess = () => {
+              resolve(request.result as number);  // Return the auto-generated ID
+          };
+          request.onerror = () => reject(request.error);
+      } catch (error) {
+          reject(error);
+      }
+  });
+};
 
   const getChatHistory = async (): Promise<Message[]> => {
     const db = await openDB();

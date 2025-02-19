@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
-import { CameraIcon, X } from 'lucide-react';
+import { CameraIcon, X, Edit2 } from 'lucide-react';
 
 export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   code?: string;
   image?: string;
+  id?: string;
 }
 
 interface ChatSectionProps {
@@ -23,6 +24,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
 
   const handleNewChat = () => {
     setMessages([]);
@@ -35,11 +37,26 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       setIsLoading(true);
       onLoadingChange && onLoadingChange(true);
 
-      // Add the user's prompt and optionally the uploaded image to the chat
-      setMessages((prev) => [
-        ...prev,
-        
-      ]);
+      if (editingMessageId) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === editingMessageId
+              ? { ...msg, text: input }
+              : msg
+          )
+        );
+        setEditingMessageId(null);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { 
+            text: input, 
+            sender: 'user', 
+            id: Date.now().toString(),
+            image: uploadedImage || undefined 
+          }
+        ]);
+      }
 
       try {
         // Send both the prompt and the optionally uploaded image
@@ -77,6 +94,12 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       }
     }
   };
+
+  const handleEdit = (messageId: string, text: string) => {
+    setEditingMessageId(messageId);
+    setInput(text);
+  };
+
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
@@ -101,10 +124,18 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             <div
               className={`p-3 rounded-lg ${
                 message.sender === 'user'
-                  ? 'bg-[#673AB7] text-white ml-auto max-w-sm'
+                  ? 'bg-[#673AB7] text-white ml-auto max-w-sm relative group'
                   : 'bg-[#1E2D3D] text-white max-w-full w-full'
               }`}
             >
+              {message.sender === 'user' && (
+                <button
+                  onClick={() => message.id && handleEdit(message.id, message.text)}
+                  className="absolute -left-8 top-2 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit2 size={16} className="text-white" />
+                </button>
+              )}
               {/* Display the uploaded image */}
               {message.image && (
                 <div className="relative mb-2">

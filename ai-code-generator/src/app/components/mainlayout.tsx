@@ -28,54 +28,48 @@ const MainLayout = () => {
     if (!input.trim()) return;
     setIsLoading(true);
   
-    // Save user query
-    const userMessage : Message= { text: input, sender: "user" };
-    setInitialMessages((prev) => [...prev, userMessage]);
-    await saveMessage(userMessage);  // Store user query in IndexedDB
-  
     try {
-      // Add the user's prompt and optionally the uploaded image to the chat
-      const newMessage: Message = {
-        text: input,
-        sender: 'user',
-        image: uploadedImage || undefined,
-      };
-
-      setInitialMessages((prev) => [...prev, newMessage]);
-
+      const userMessage: Message = { text: input, sender: "user" };
+      const messageId = await saveMessage(userMessage);
+      setInitialMessages((prev) => [...prev, { ...userMessage, id: messageId.toString() }]);
+  
       const response = await api.post('agent-model/generate', {
         prompt: input,
         imageURl: uploadedImage || undefined,
       });
-
+  
       if (response.data.success) {
         const responseData = response.data.data;
         const projectCode = responseData.code;
         const framework = responseData.framework || '';
         const otherResponse = responseData.otherResponse;
 
-        // Add the assistant's response to the chat
+        const assistantResponseText = responseData.otherResponse;
+        const assistantMessage: Message = { text: assistantResponseText, sender: 'assistant' };
+
+        const assistantMessageId = await saveMessage(assistantMessage); //Save assistant message
         setInitialMessages((prev) => [
           ...prev,
-          { text: otherResponse, sender: 'assistant' },
+          { ...assistantMessage, id: assistantMessageId.toString() },
         ]);
-
         setProject({ code: projectCode, framework });
         setShowSplitScreen(true);
       }
     } catch (error) {
       console.error('Error generating code:', error);
+      const errorMessage: Message = {
+        text: "Sorry, there was an error generating the code. Please try again.",
+        sender: 'assistant',
+      };
+      const errorId = await saveMessage(errorMessage);
       setInitialMessages((prev) => [
         ...prev,
-        {
-          text: "Sorry, there was an error generating the code. Please try again.",
-          sender: 'assistant',
-        },
+        { ...errorMessage, id: errorId.toString() },
       ]);
     } finally {
       setIsLoading(false);
       setInput('');
-      setUploadedImage(null); // Clear the uploaded image after submission
+      setUploadedImage(null);
     }
   };
   
@@ -125,7 +119,6 @@ const MainLayout = () => {
                 </button>
               )}
             </div>
-            {/* Image Upload Section */}
             <div className="mt-4 flex items-center">
               <ImageUpload
                 uploadedImage={uploadedImage}
@@ -156,7 +149,6 @@ const MainLayout = () => {
   );
 };
 
-// Reusable Image Upload Component
 interface ImageUploadProps {
   onUpload: (base64Image: string) => void;
   onRemove: () => void;
