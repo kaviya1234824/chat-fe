@@ -26,7 +26,6 @@ const MainLayout = () => {
     if (!input.trim()) return;
     setIsLoading(true);
     try {
-      // Add the user's prompt and optionally the uploaded image to the chat
       const newMessage: Message = {
         text: input,
         sender: 'user',
@@ -46,7 +45,6 @@ const MainLayout = () => {
         const framework = responseData.framework || '';
         const otherResponse = responseData.otherResponse;
 
-        // Add the assistant's response to the chat
         setInitialMessages((prev) => [
           ...prev,
           { text: otherResponse, sender: 'assistant' },
@@ -67,7 +65,7 @@ const MainLayout = () => {
     } finally {
       setIsLoading(false);
       setInput('');
-      setUploadedImage(null); // Clear the uploaded image after submission
+      setUploadedImage(null);
     }
   };
 

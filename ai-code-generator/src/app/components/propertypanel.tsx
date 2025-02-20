@@ -27,7 +27,7 @@ const PropertyPanel = ({styles, onUpdate, onClose}: PropertyPanelProps) => {
         <input
           type="text"
           className="property-input"
-          value={styles.margin}
+          value={styles.margin || ''}
           onChange={(e) => onUpdate('margin', e.target.value)}
         />
       </div>
@@ -37,7 +37,7 @@ const PropertyPanel = ({styles, onUpdate, onClose}: PropertyPanelProps) => {
         <input
           type="text"
           className="property-input"
-          value={styles.padding}
+          value={styles.padding || ''}
           onChange={(e) => onUpdate('padding', e.target.value)}
         />
       </div>
@@ -47,7 +47,7 @@ const PropertyPanel = ({styles, onUpdate, onClose}: PropertyPanelProps) => {
         <input
           type="text"
           className="property-input"
-          value={styles.background}
+          value={styles.background || ''} 
           onChange={(e) => onUpdate('background', e.target.value)}
         />
       </div>
@@ -57,7 +57,7 @@ const PropertyPanel = ({styles, onUpdate, onClose}: PropertyPanelProps) => {
         <input
           type="text"
           className="property-input"
-          value={styles.borderRadius}
+          value={styles.borderRadius || ''}
           onChange={(e) => onUpdate('borderRadius', e.target.value)}
         />
       </div>

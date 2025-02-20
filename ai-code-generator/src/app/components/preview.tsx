@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SandpackProvider,
   SandpackCodeEditor,
@@ -7,12 +7,16 @@ import {
   SandpackPredefinedTemplate,
   UnstyledOpenInCodeSandboxButton,
   useSandpack,
+  SandpackConsole,
+  SandpackLayout,
+  useSandpackClient,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
+import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import * as shadcnComponents from "@/lib/shadcn";
-import  dedent from "dedent"
-import Editor from './editor';
+import dedent from "dedent";
+import Editor from "./editor";
 
 const allowedTemplates = [
   "react",
@@ -37,6 +41,9 @@ interface ProjectData {
 interface PreviewSectionProps {
   data: ProjectData | null;
   isGenerating?: boolean;
+}
+interface CustomPreviewProps {
+  previewIframeRef: React.MutableRefObject<HTMLIFrameElement | null>;
 }
 
 const flattenFiles = (files: any, prefix = ""): SandpackFiles => {
@@ -64,22 +71,72 @@ const getEntryFile = (files: SandpackFiles, template: string): string => {
     "/src/App.js",
     "/src/App.tsx",
   ];
-  for (const candidate of candidates) {
-    if (files[candidate]) {
-      return candidate;
+  return candidates.find((candidate) => files[candidate]) || (template.includes("ts") ? "/index.tsx" : "/index.js");
+};
+
+const CustomPreview: React.FC<CustomPreviewProps> = ({ previewIframeRef }) => {
+  const { iframe, listen } = useSandpackClient();
+
+
+  useEffect(() => {
+    if (iframe.current) {
+      previewIframeRef.current = iframe.current;
+      console.log("Sandbox iframe assigned to ref:", previewIframeRef.current);
+      iframe.current.setAttribute(
+        "sandbox",
+        "allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-pointer-lock"
+      );
+      iframe.current.style.width = "100%";
+      iframe.current.style.height = "100%";
+      iframe.current.style.border = "none";
     }
-  }
-  return template.includes("ts") ? "/index.tsx" : "/index.js";
+
+    const unsubscribe = listen((message) => {
+      if (message.type === "resize" && message.height && iframe.current) {
+        if (iframe.current) {
+          iframe.current.style.height = `${message.height}px`;
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [iframe, listen, previewIframeRef]);
+
+  return (
+    <div className="w-full h-full">
+            {/* <SandpackLayout> */}
+      <SandpackPreview
+        style={{
+          height: "100%",
+          width: "100%",
+          border: "none",
+          margin: 0,
+          padding: 0,
+          overflow: "hidden",
+        }}
+        showNavigator={true}
+        showRefreshButton={true}
+      />
+       {/* <SandpackConsole 
+       showHeader= {true}
+       showResetConsoleButton= {true}
+       showRestartButton={true}/>
+       </SandpackLayout> */}
+    </div>
+  );
 };
 
 const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
-      ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
+        ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
         : "react"
       : "react";
 
@@ -87,46 +144,6 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
     if (data && data.code) {
       const flattened = flattenFiles(data.code);
       console.log("Flattened files:", flattened);
-
-      const entryCandidates = [
-        "/index.js",
-        "/index.tsx",
-        "/src/index.js",
-        "/src/index.tsx",
-      ];
-      const hasEntry = entryCandidates.some(
-        (candidate) => flattened[candidate]
-      );
-      if (!hasEntry) {
-        const defaultEntry = template.includes("ts")
-          ? "/index.tsx"
-          : "/index.js";
-        flattened[defaultEntry] = template.includes("ts")
-          ? `import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
-
-ReactDOM.render(<App />, document.getElementById("root"));`
-          : `import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
-
-ReactDOM.render(<App />, document.getElementById("root"));`;
-      }
-
-      const appCandidates = [
-        "/App.js",
-        "/App.tsx",
-        "/src/App.js",
-        "/src/App.tsx",
-      ];
-      const hasApp = appCandidates.some((candidate) => flattened[candidate]);
-      if (!hasApp) {
-        const defaultApp = template.includes("ts") ? "/App.tsx" : "/App.js";
-        flattened[defaultApp] = `export default function App() {
-  return <div>Hello, World!</div>;
-}`;
-      }
 
       if (!flattened["/public/index.html"]) {
         flattened["/public/index.html"] = `<!DOCTYPE html>
@@ -153,80 +170,33 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     }
   }, [data, template]);
 
-  const CustomPreview = () => {
-    const { listen } = useSandpack();
-    
-    useEffect(() => {
-      const unsubscribe = listen((msg) => {
-        if (msg.type === "start") {
-          setTimeout(() => {
-            const preview = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
-            if (preview) {
-              preview.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-forms');
-              preview.style.width = '100%';
-              preview.style.height = '100%';
-              preview.style.border = 'none';
-            }
-          }, 1000);
-        }
-      });
-
-      return () => unsubscribe();
-    }, [listen]);
-
-    return (
-      <div className="w-full h-full">
-        <SandpackPreview
-          style={{
-            height: '100%',
-            width: '100%',
-            border: 'none',
-            margin: 0,
-            padding: 0,
-            overflow: 'hidden'
-          }}
-          showNavigator={false}
-          showRefreshButton={false}
-        />
-      </div>
-    );
-  };
-
   return (
-    <Editor activeView={activeView}>
+    <Editor activeView={activeView} sandboxRef={previewIframeRef}>
       <div className="relative w-full bg-gray-900 flex flex-col h-screen">
         <SandpackProvider
           key={JSON.stringify(files)}
           theme={nightOwl}
           template={template}
           files={files}
-          customSetup={{ entry: getEntryFile(files, template),
-
+          customSetup={{
+            entry: getEntryFile(files, template),
             dependencies: {
-              // "lucide-react": "latest",
               recharts: "2.9.0",
               "react-router-dom": "5.3.0",
-           
-
             },
-
-           }}
+          }}
           options={{
-            // recompileMode: "delayed",
-            // recompileDelay: 500,
             autorun: true,
             autoReload: true,
+            initMode: "immediate",
             externalResources: [
               "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-
             ],
             classes: {
               "sp-layout": "!bg-gray-900",
               "sp-file-explorer": "!bg-gray-900 !border-gray-700",
               "sp-tab-button": "!bg-gray-800",
             },
-            // useQueryString: true,
-            // allowRunOnPreview: true,
           }}
         >
           <div className="p-2 bg-gray-800 border-b border-gray-700">
@@ -258,12 +228,14 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
                     wrapContent={true}
                     closableTabs={false}
                     style={{ height: "90vh" }}
+                    extensions={[autocompletion()]}
+                    extensionsKeymap={[...completionKeymap]}
                   />
                 </div>
               </div>
             ) : (
               <div className="w-full h-full relative">
-                <CustomPreview />
+                <CustomPreview previewIframeRef={previewIframeRef} />
               </div>
             )}
           </div>
@@ -274,19 +246,12 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
               </div>
             </div>
           )}
-
-      <UnstyledOpenInCodeSandboxButton>
-        Open in CodeSandbox
-      </UnstyledOpenInCodeSandboxButton>
+          {/* <SandpackCodeEditor extensions={[autocompletion()]} /> */}
+          <UnstyledOpenInCodeSandboxButton>Open in CodeSandbox</UnstyledOpenInCodeSandboxButton>
         </SandpackProvider>
-
-
       </div>
     </Editor>
   );
 };
 
 export default PreviewSection;
-
-
-
