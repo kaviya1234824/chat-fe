@@ -7,10 +7,12 @@ import {
   SandpackPredefinedTemplate,
   UnstyledOpenInCodeSandboxButton,
 } from "@codesandbox/sandpack-react";
-import { nightOwl } from "@codesandbox/sandpack-themes";
+import { cyberpunk, githubLight, nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
 import * as shadcnComponents from "@/lib/shadcn";
 import  dedent from "dedent"
+import { LanguageSupport, StreamLanguage } from "@codemirror/language";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
 
 
 
@@ -160,7 +162,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     <div className="relative w-full bg-gray-900 flex flex-col h-screen">
       <SandpackProvider
         key={JSON.stringify(files)}
-        theme={nightOwl}
+        theme={cyberpunk}
         template={template}
         files={files}
         customSetup={{ entry: getEntryFile(files, template),
@@ -207,31 +209,39 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         </div>
 
         <div className="flex-1 flex h-screen overflow-hidden">
-          {activeView === "code" ? (
-            <div className="flex w-full">
-              <div className="w-48 border-r border-gray-700">
-                <SandpackFileExplorer style={{ height: "90vh" }} />
-              </div>
-              <div className="flex-1">
-                <SandpackCodeEditor
-                  showLineNumbers={true}
-                  showInlineErrors={true}
-                  wrapContent={true}
-                  closableTabs={false}
-                  style={{ height: "90vh" }}
-                />
-              </div>
-            </div>
-          ) : (
+          {activeView === "preview" ? (
             <SandpackPreview
               style={{
-                height: "100vh",
-                backgroundColor: "white",
-                width: "100%",
+          height: "100vh",
+          backgroundColor: "white",
+          width: "100%",
               }}
               showNavigator={true}
               showRefreshButton={true}
             />
+          ) : (
+            <div className="flex w-full">
+              <div className="w-48 border-r border-gray-300">
+          <SandpackFileExplorer style={{ height: "90vh" }} />
+              </div>
+              <div className="flex-1">
+          <SandpackCodeEditor
+            showLineNumbers={true}
+            showInlineErrors={true}
+            showTabs={false}
+            readOnly={true}
+            closableTabs={true}
+            style={{ height: "90vh" }}
+            additionalLanguages={[
+              {
+                name: "shell",
+                extensions: ["sh", "bat", "ps1"],
+                language: new LanguageSupport(StreamLanguage.define(shell)),
+              },
+            ]}
+          />
+              </div>
+            </div>
           )}
         </div>
         {isGenerating && (
@@ -245,6 +255,12 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     <UnstyledOpenInCodeSandboxButton>
       Open in CodeSandbox
     </UnstyledOpenInCodeSandboxButton>
+
+    actionsChildren={
+          <button onClick={() => window.alert("Bug reported!")}>
+            Report bug
+          </button>
+        }
       </SandpackProvider>
 
 

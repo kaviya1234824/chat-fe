@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@codemirror/legacy-modes": "^6.4.3",
     "@codesandbox/sandpack-react": "^2.19.11",
     "@codesandbox/sandpack-themes": "^2.0.21",
     "@radix-ui/react-dialog": "^1.1.6",
