@@ -22,6 +22,19 @@ const MainLayout = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
+  // Static prompts
+  const staticPrompts = [
+    
+    
+    "Build a full-stack e-commerce application using Next.js and Firebase. Include features like product listing, shopping cart, user authentication, and payment integration. The app should support real-time updates and have a clean, modern UI.",
+    "Develop a personal portfolio website using Gatsby and GraphQL. The site should showcase your projects, skills, and experience. Include a blog section where you can write articles about web development trends and technologies."
+  ];
+
+  // Handle prompt click
+  const handlePromptClick = (prompt: string) => {
+    setInput(prompt); // Bind the prompt text to the input field
+  };
+
   const handleGenerate = async () => {
     if (!input.trim()) return;
     setIsLoading(true);
@@ -32,26 +45,21 @@ const MainLayout = () => {
         sender: 'user',
         image: uploadedImage || undefined,
       };
-
       setInitialMessages((prev) => [...prev, newMessage]);
-
       const response = await api.post('agent-model/generate', {
         prompt: input,
         imageURl: uploadedImage || undefined,
       });
-
       if (response.data.success) {
         const responseData = response.data.data;
         const projectCode = responseData.code;
         const framework = responseData.framework || '';
         const otherResponse = responseData.otherResponse;
-
         // Add the assistant's response to the chat
         setInitialMessages((prev) => [
           ...prev,
           { text: otherResponse, sender: 'assistant' },
         ]);
-
         setProject({ code: projectCode, framework });
         setShowSplitScreen(true);
       }
@@ -117,6 +125,28 @@ const MainLayout = () => {
               />
             </div>
           </div>
+
+          {/* Static Prompts Section */}
+          <div className="mt-8 ml-36 w-[500px] space-y-4">
+            <h2 className="mr-1 text-lg font-semibold text-gray-400">Example Prompts</h2>
+            {staticPrompts.map((prompt, index) => (
+              <div
+                key={index}
+                onClick={() => handlePromptClick(prompt)}
+                className="relative group cursor-pointer"
+              >
+                {/* Styled Box */}
+                <div className="p-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors max-w-[400px] overflow-hidden">
+                  <p className="text-gray-300 text-sm truncate">{prompt}</p>
+                </div>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs p-2 rounded-md whitespace-normal max-w-[400px] z-10">
+                  {prompt}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
@@ -145,7 +175,6 @@ interface ImageUploadProps {
   onRemove: () => void;
   uploadedImage: string | null;
 }
-
 const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, onRemove, uploadedImage }) => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -166,7 +195,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUpload, onRemove, uploadedI
       }
     }
   };
-
   return (
     <div className="flex items-center">
       {uploadedImage ? (

@@ -10,14 +10,11 @@ import {
 import { cyberpunk, githubLight, nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
 import * as shadcnComponents from "@/lib/shadcn";
-import  dedent from "dedent"
+import dedent from "dedent";
 import { LanguageSupport, StreamLanguage } from "@codemirror/language";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
-
-
-
-
-
+import JSZip from 'jszip';
+import { Download } from 'lucide-react';
 
 const allowedTemplates = [
   "react",
@@ -84,7 +81,7 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const template =
     data && data.framework
       ? allowedTemplates.includes(data.framework.toLowerCase())
-      ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
+        ? (data.framework.toLowerCase() as SandpackPredefinedTemplate)
         : "react"
       : "react";
 
@@ -158,6 +155,21 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     }
   }, [data, template]);
 
+  const handleDownloadZip = async () => {
+    const zip = new JSZip();
+    for (const [path, content] of Object.entries(files)) {
+      const zipPath = path.startsWith('/') ? path.slice(1) : path;
+      zip.file(zipPath, content);
+    }
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'project.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="relative w-full bg-gray-900 flex flex-col h-screen">
       <SandpackProvider
@@ -165,25 +177,19 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
         theme={cyberpunk}
         template={template}
         files={files}
-        customSetup={{ entry: getEntryFile(files, template),
-
+        customSetup={{
+          entry: getEntryFile(files, template),
           dependencies: {
-            // "lucide-react": "latest",
+            "lucide-react": "latest",
             recharts: "2.9.0",
             "react-router-dom": "5.3.0",
-         
-
           },
-
-         }}
+        }}
         options={{
-          // recompileMode: "delayed",
-          // recompileDelay: 500,
           autorun: true,
           autoReload: true,
           externalResources: [
             "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-
           ],
           classes: {
             "sp-layout": "!bg-gray-900",
@@ -192,7 +198,7 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           },
         }}
       >
-        <div className="p-2 bg-gray-800 border-b border-gray-700">
+        <div className="p-2 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
           <LayoutGroup>
             {(["code", "preview"] as const).map((view) => (
               <button
@@ -206,15 +212,27 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
               </button>
             ))}
           </LayoutGroup>
+          <button
+            onClick={handleDownloadZip}
+            disabled={isGenerating || Object.keys(files).length === 0}
+            className={`relative px-4 py-1 rounded-md text-sm font-medium flex items-center ${
+              isGenerating || Object.keys(files).length === 0
+                ? 'text-gray-600 cursor-not-allowed'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Zip
+          </button>
         </div>
 
         <div className="flex-1 flex h-screen overflow-hidden">
           {activeView === "preview" ? (
             <SandpackPreview
               style={{
-          height: "100vh",
-          backgroundColor: "white",
-          width: "100%",
+                height: "100vh",
+                backgroundColor: "white",
+                width: "100%",
               }}
               showNavigator={true}
               showRefreshButton={true}
@@ -222,24 +240,24 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           ) : (
             <div className="flex w-full">
               <div className="w-48 border-r border-gray-300">
-          <SandpackFileExplorer style={{ height: "90vh" }} />
+                <SandpackFileExplorer style={{ height: "90vh" }} />
               </div>
               <div className="flex-1">
-          <SandpackCodeEditor
-            showLineNumbers={true}
-            showInlineErrors={true}
-            showTabs={false}
-            readOnly={true}
-            closableTabs={true}
-            style={{ height: "90vh" }}
-            additionalLanguages={[
-              {
-                name: "shell",
-                extensions: ["sh", "bat", "ps1"],
-                language: new LanguageSupport(StreamLanguage.define(shell)),
-              },
-            ]}
-          />
+                <SandpackCodeEditor
+                  showLineNumbers={true}
+                  showInlineErrors={true}
+                  showTabs={false}
+                  readOnly={false}
+                  closableTabs={true}
+                  style={{ height: "90vh" }}
+                  additionalLanguages={[
+                    {
+                      name: "shell",
+                      extensions: ["sh", "bat", "ps1"],
+                      language: new LanguageSupport(StreamLanguage.define(shell)),
+                    },
+                  ]}
+                />
               </div>
             </div>
           )}
@@ -252,23 +270,12 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           </div>
         )}
 
-    <UnstyledOpenInCodeSandboxButton>
-      Open in CodeSandbox
-    </UnstyledOpenInCodeSandboxButton>
-
-    actionsChildren={
-          <button onClick={() => window.alert("Bug reported!")}>
-            Report bug
-          </button>
-        }
+        <UnstyledOpenInCodeSandboxButton>
+          Open in CodeSandbox
+        </UnstyledOpenInCodeSandboxButton>
       </SandpackProvider>
-
-
     </div>
   );
 };
 
 export default PreviewSection;
-
-
-
