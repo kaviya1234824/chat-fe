@@ -7,14 +7,11 @@ import {
   SandpackPredefinedTemplate,
   UnstyledOpenInCodeSandboxButton,
 } from "@codesandbox/sandpack-react";
-import { cyberpunk, githubLight, nightOwl } from "@codesandbox/sandpack-themes";
+import { cyberpunk } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
-import * as shadcnComponents from "@/lib/shadcn";
-import dedent from "dedent";
-import { LanguageSupport, StreamLanguage } from "@codemirror/language";
-import { shell } from "@codemirror/legacy-modes/mode/shell";
-import JSZip from 'jszip';
-import { Download } from 'lucide-react';
+import JSZip from "jszip";
+import { Download, Github } from "lucide-react";
+import axios from "axios";
 
 const allowedTemplates = [
   "react",
@@ -77,6 +74,8 @@ const getEntryFile = (files: SandpackFiles, template: string): string => {
 const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
+  const [githubToken, setGithubToken] = useState<string | null>(null);
+  const [repoUrl, setRepoUrl] = useState<string | null>(null);
 
   const template =
     data && data.framework
@@ -88,21 +87,15 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   useEffect(() => {
     if (data && data.code) {
       const flattened = flattenFiles(data.code);
-      console.log("Flattened files:", flattened);
-
       const entryCandidates = [
         "/index.js",
         "/index.tsx",
         "/src/index.js",
         "/src/index.tsx",
       ];
-      const hasEntry = entryCandidates.some(
-        (candidate) => flattened[candidate]
-      );
+      const hasEntry = entryCandidates.some((candidate) => flattened[candidate]);
       if (!hasEntry) {
-        const defaultEntry = template.includes("ts")
-          ? "/index.tsx"
-          : "/index.js";
+        const defaultEntry = template.includes("ts") ? "/index.tsx" : "/index.js";
         flattened[defaultEntry] = template.includes("ts")
           ? `import React from "react";
 import ReactDOM from "react-dom";
@@ -116,12 +109,7 @@ import App from "./App";
 ReactDOM.render(<App />, document.getElementById("root"));`;
       }
 
-      const appCandidates = [
-        "/App.js",
-        "/App.tsx",
-        "/src/App.js",
-        "/src/App.tsx",
-      ];
+      const appCandidates = ["/App.js", "/App.tsx", "/src/App.js", "/src/App.tsx"];
       const hasApp = appCandidates.some((candidate) => flattened[candidate]);
       if (!hasApp) {
         const defaultApp = template.includes("ts") ? "/App.tsx" : "/App.js";
@@ -155,19 +143,61 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
     }
   }, [data, template]);
 
+  // Handle OAuth redirect and extract token
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    if (token) {
+      setGithubToken(token);
+      window.history.replaceState({}, document.title, window.location.pathname); // Clean URL
+    }
+  }, []);
+
   const handleDownloadZip = async () => {
     const zip = new JSZip();
     for (const [path, content] of Object.entries(files)) {
-      const zipPath = path.startsWith('/') ? path.slice(1) : path;
+      const zipPath = path.startsWith("/") ? path.slice(1) : path;
       zip.file(zipPath, content);
     }
-    const content = await zip.generateAsync({ type: 'blob' });
+    const content = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(content);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'project.zip';
+    a.download = "project.zip";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const connectWithGitHub = () => {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID; // Add to .env.local
+    const redirectUri = "http://localhost:3000/api/github/callback"; // NestJS callback
+    const scope = "repo"; // Permission to create repos
+    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    window.location.href = url;
+  };
+
+  const pushToGitHub = async () => {
+    if (!githubToken) {
+      alert("Please connect with GitHub first!");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/api/github/push",
+        {
+          files,
+          repoName: "generated-react-app",
+          token: githubToken,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      setRepoUrl(response.data.url);
+      alert(`Successfully pushed to ${response.data.url}`);
+    } catch (error) {
+      console.error("Error pushing to GitHub:", error);
+      alert("Failed to push to GitHub");
+    }
   };
 
   return (
@@ -212,18 +242,42 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
               </button>
             ))}
           </LayoutGroup>
-          <button
-            onClick={handleDownloadZip}
-            disabled={isGenerating || Object.keys(files).length === 0}
-            className={`relative px-4 py-1 rounded-md text-sm font-medium flex items-center ${
-              isGenerating || Object.keys(files).length === 0
-                ? 'text-gray-600 cursor-not-allowed'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Zip
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadZip}
+              disabled={isGenerating || Object.keys(files).length === 0}
+              className={`relative px-4 py-1 rounded-md text-sm font-medium flex items-center ${
+                isGenerating || Object.keys(files).length === 0
+                  ? "text-gray-600 cursor-not-allowed"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Zip
+            </button>
+            {!githubToken ? (
+              <button
+                onClick={connectWithGitHub}
+                className="relative px-4 py-1 rounded-md text-sm font-medium flex items-center text-gray-400 hover:text-white"
+              >
+                <Github className="w-4 h-4 mr-2" />
+                Connect with GitHub
+              </button>
+            ) : (
+              <button
+                onClick={pushToGitHub}
+                disabled={isGenerating || Object.keys(files).length === 0}
+                className={`relative px-4 py-1 rounded-md text-sm font-medium flex items-center ${
+                  isGenerating || Object.keys(files).length === 0
+                    ? "text-gray-600 cursor-not-allowed"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Github className="w-4 h-4 mr-2" />
+                Push to GitHub
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 flex h-screen overflow-hidden">
@@ -250,13 +304,6 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
                   readOnly={false}
                   closableTabs={true}
                   style={{ height: "90vh" }}
-                  additionalLanguages={[
-                    {
-                      name: "shell",
-                      extensions: ["sh", "bat", "ps1"],
-                      language: new LanguageSupport(StreamLanguage.define(shell)),
-                    },
-                  ]}
                 />
               </div>
             </div>
@@ -274,6 +321,11 @@ ReactDOM.render(<App />, document.getElementById("root"));`;
           Open in CodeSandbox
         </UnstyledOpenInCodeSandboxButton>
       </SandpackProvider>
+      {repoUrl && (
+        <div className="p-2 bg-gray-800 text-white text-sm">
+          Pushed to: <a href={repoUrl} target="_blank" rel="noopener noreferrer">{repoUrl}</a>
+        </div>
+      )}
     </div>
   );
 };
