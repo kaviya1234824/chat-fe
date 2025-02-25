@@ -6,16 +6,11 @@ import {
   SandpackFileExplorer,
   SandpackPredefinedTemplate,
   UnstyledOpenInCodeSandboxButton,
-  useSandpack,
-  SandpackConsole,
-  SandpackLayout,
   useSandpackClient,
 } from "@codesandbox/sandpack-react";
 import { nightOwl } from "@codesandbox/sandpack-themes";
 import { LayoutGroup } from "framer-motion";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
-import * as shadcnComponents from "@/lib/shadcn";
-import dedent from "dedent";
 import Editor from "./editor";
 
 const allowedTemplates = [
@@ -42,6 +37,7 @@ interface PreviewSectionProps {
   data: ProjectData | null;
   isGenerating?: boolean;
 }
+
 interface CustomPreviewProps {
   previewIframeRef: React.MutableRefObject<HTMLIFrameElement | null>;
 }
@@ -71,42 +67,54 @@ const getEntryFile = (files: SandpackFiles, template: string): string => {
     "/src/App.js",
     "/src/App.tsx",
   ];
-  return candidates.find((candidate) => files[candidate]) || (template.includes("ts") ? "/index.tsx" : "/index.js");
+  return (
+    candidates.find((candidate) => files[candidate]) ||
+    (template.includes("ts") ? "/index.tsx" : "/index.js")
+  );
 };
 
 const CustomPreview: React.FC<CustomPreviewProps> = ({ previewIframeRef }) => {
   const { iframe, listen } = useSandpackClient();
-
+  const [iframeNode, setIframeNode] = useState<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
-    if (iframe.current) {
-      previewIframeRef.current = iframe.current;
-      console.log("Sandbox iframe assigned to ref:", previewIframeRef.current);
-      iframe.current.setAttribute(
+    if (iframe.current && iframe.current !== iframeNode) {
+      setIframeNode(iframe.current);
+    }
+  }, [iframe, iframeNode]);
+
+  // 3) Once we actually have an iframeNode, do any setup or logging.
+  useEffect(() => {
+    if (!iframeNode) {
+      console.log("No iframe yet...");
+      return;
+    }
+    console.log("Iframe is now available!", iframeNode);
+
+    // Assign to your custom ref, if needed for further parent-level logic
+    previewIframeRef.current = iframeNode;
+      iframeNode.setAttribute(
         "sandbox",
         "allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-pointer-lock"
       );
-      iframe.current.style.width = "100%";
-      iframe.current.style.height = "100%";
-      iframe.current.style.border = "none";
-    }
+      iframeNode.style.width = "100%";
+      iframeNode.style.height = "100%";
+      iframeNode.style.border = "none";
+    
 
     const unsubscribe = listen((message) => {
-      if (message.type === "resize" && message.height && iframe.current) {
-        if (iframe.current) {
-          iframe.current.style.height = `${message.height}px`;
-        }
+      if (message.type === "resize" && message.height && iframeNode) {
+        iframeNode.style.height = `${message.height}px`;
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [iframe, listen, previewIframeRef]);
+  }, [iframeNode, listen, previewIframeRef]);
 
   return (
     <div className="w-full h-full">
-            {/* <SandpackLayout> */}
       <SandpackPreview
         style={{
           height: "100%",
@@ -119,16 +127,11 @@ const CustomPreview: React.FC<CustomPreviewProps> = ({ previewIframeRef }) => {
         showNavigator={true}
         showRefreshButton={true}
       />
-       {/* <SandpackConsole 
-       showHeader= {true}
-       showResetConsoleButton= {true}
-       showRestartButton={true}/>
-       </SandpackLayout> */}
     </div>
   );
 };
 
-const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
+const PreviewSection: React.FC<PreviewSectionProps> = ({ data, isGenerating }) => {
   const [files, setFiles] = useState<SandpackFiles>({});
   const [activeView, setActiveView] = useState<"code" | "preview">("code");
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -143,8 +146,7 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   useEffect(() => {
     if (data && data.code) {
       const flattened = flattenFiles(data.code);
-      console.log("Flattened files:", flattened);
-
+      // Ensure a default index.html exists.
       if (!flattened["/public/index.html"]) {
         flattened["/public/index.html"] = `<!DOCTYPE html>
 <html lang="en">
@@ -159,11 +161,9 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   </body>
 </html>`;
       }
-
       if (!flattened["/src/index.css"]) {
         flattened["/src/index.css"] = "/* default index css */";
       }
-
       setFiles(flattened);
     } else {
       setFiles({});
@@ -171,7 +171,6 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
   }, [data, template]);
 
   return (
-    <Editor activeView={activeView} sandboxRef={previewIframeRef}>
       <div className="relative w-full bg-gray-900 flex flex-col h-screen">
         <SandpackProvider
           key={JSON.stringify(files)}
@@ -234,9 +233,13 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
                 </div>
               </div>
             ) : (
+    <Editor activeView={activeView} sandboxRef={previewIframeRef}>
+
               <div className="w-full h-full relative">
                 <CustomPreview previewIframeRef={previewIframeRef} />
               </div>
+    </Editor>
+
             )}
           </div>
           {isGenerating && (
@@ -246,11 +249,11 @@ const PreviewSection = ({ data, isGenerating }: PreviewSectionProps) => {
               </div>
             </div>
           )}
-          {/* <SandpackCodeEditor extensions={[autocompletion()]} /> */}
-          <UnstyledOpenInCodeSandboxButton>Open in CodeSandbox</UnstyledOpenInCodeSandboxButton>
+          <UnstyledOpenInCodeSandboxButton>
+            Open in CodeSandbox
+          </UnstyledOpenInCodeSandboxButton>
         </SandpackProvider>
       </div>
-    </Editor>
   );
 };
 

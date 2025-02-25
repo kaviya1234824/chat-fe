@@ -74,6 +74,7 @@ body {
 
 .editor-container {
   @apply h-screen flex flex-col bg-[hsl(var(--editor-bg))];
+  width:200vh;
 }
 
 .preview-container {
@@ -115,7 +116,7 @@ body {
 }
 
 .toolbar {
-  @apply flex items-center gap-2 p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl;
+  @apply flex items-center gap-2 p-1.5 border-b border-border/50 bg-card/80 backdrop-blur-xl;
 }
 
 .property-input {
