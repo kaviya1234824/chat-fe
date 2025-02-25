@@ -19,7 +19,7 @@ interface ChatSectionProps {
   onLoadingChange?: (loading: boolean) => void;
 }
 
-const api = axios.create({ baseURL: 'http://localhost:3000/api/' });
+const api = axios.create({ baseURL: 'http://localhost:8000/' });
 
 const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: ChatSectionProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -45,7 +45,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       ]);
 
       try {
-        const response = await api.post('agent-model/generate', {
+        const response = await api.post('agent_model/generate', {
           prompt: input,
           imageURl: uploadedImage ?? undefined,
         });
