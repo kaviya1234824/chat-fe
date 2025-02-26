@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
-import { CameraIcon, PenIcon, X } from 'lucide-react';
-import EditPopup from './edit';
-import { Button} from "@/components/ui/button";
+import { CameraIcon, X, Menu } from 'lucide-react';
+import Sidebar from './chatHistory';  // Import the Sidebar component with a proper name
+import { Button } from "@/components/ui/button";
 
-
+// Export Message interface so it can be used in Sidebar
 export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   code?: string;
   image?: string;
+}
+
+interface ChatHistoryItem {
+  id: string;
+  title: string;
+  messages: Message[];
 }
 
 interface ChatSectionProps {
@@ -26,11 +32,38 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+      setChatHistory(JSON.parse(savedHistory));
+    }
+  }, []);
+
+  // Save chat history to localStorage whenever it updates
+  useEffect(() => {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+  }, [chatHistory]);
 
   const handleNewChat = () => {
+    if (messages.length > 0) {
+      const newChat: ChatHistoryItem = {
+        id: Date.now().toString(),
+        title: messages[0].text.slice(0, 30) + '...',
+        messages: [...messages],
+      };
+      setChatHistory((prev) => [...prev, newChat]);
+    }
     setMessages([]);
     onCodeUpdate(null);
+  };
+
+  const handleSelectChat = (selectedMessages: Message[]) => {
+    setMessages(selectedMessages);
+    setIsSidebarOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,10 +72,8 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       setIsLoading(true);
       onLoadingChange && onLoadingChange(true);
 
-      setMessages((prev) => [
-        ...prev,
-        
-      ]);
+      const userMessage: Message = { text: input, sender: 'user', image: uploadedImage || undefined };
+      setMessages((prev) => [...prev, userMessage]);
 
       try {
         const response = await api.post('agent_model/generate', {
@@ -80,12 +111,20 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   };
 
   return (
-    <div className="w-1/2 flex flex-col border-r border-gray-700 bg-[#011627]">
+    <div className="w-1/2 flex flex-col border-r border-gray-700 bg-[#011627] relative">
       <div className="p-1.5 border-b border-gray-700 bg-[#1E2D3D] flex justify-between items-center">
-        <h2 className="font-bold text-white">Chat</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="px-2 py-1 h-8 bg-[#673AB7] text-white text-sm rounded hover:bg-[#5D34A5] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <Menu size={20} />
+          </button>
+          <h2 className="font-bold text-white">Chat</h2>
+        </div>
         <button
           onClick={handleNewChat}
-          className="px-2 py-1 h-8 bg-[#673AB7] text-centre text-white text-sm rounded hover:bg-[#5D34A5] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-2 py-1 h-8 bg-[#673AB7] text-center text-white text-sm rounded hover:bg-[#5D34A5] focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           New Chat
         </button>
@@ -147,16 +186,9 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
             className="flex-1 p-2 h-10 scrollbar-hidden border text-white border-gray-600 bg-[#1E2D3D] rounded focus:outline-none focus:ring-2 focus:ring-[#5D34A5]"
             disabled={isLoading}
           />
-          {/* <Button
-            onClick={() => setIsEditOpen(true)}
-            className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
-          >
-            <PenIcon className='h-5 w-5'/>
-          </Button>
-          {isEditOpen && <EditPopup onClose={() => setIsEditOpen(false)} />} */}
           <label
             htmlFor="imageUpload"
-            className="flex justify-centre w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
+            className="flex justify-center w-10 text-sm bg-[#673AB7] text-white rounded cursor-pointer hover:bg-[#5D34A5]"
           >
             <CameraIcon className="ml-2 mr-2 h-10 w-6" />
           </label>
@@ -211,6 +243,13 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
           </button>
         </div>
       </form>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        chatHistory={chatHistory}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+      />
     </div>
   );
 };
