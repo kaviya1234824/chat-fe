@@ -62,7 +62,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
       }
 
       try {
-        // Send both the prompt and the optionally uploaded image
         const response = await api.post('agent-model/generate', {
           prompt: input,
           imageURl: uploadedImage || undefined,
@@ -92,7 +91,6 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
         setIsLoading(false);
         onLoadingChange && onLoadingChange(false);
         setInput('');
-        // Optionally clear the image after sending
         setUploadedImage(null);
       }
     }
