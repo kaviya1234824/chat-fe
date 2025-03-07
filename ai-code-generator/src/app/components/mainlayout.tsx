@@ -47,7 +47,7 @@ const MainLayout = () => {
         const assistantResponseText = responseData.otherResponse;
         const assistantMessage: Message = { text: assistantResponseText, sender: 'assistant' };
 
-        const assistantMessageId = await saveMessage(assistantMessage); //Save assistant message
+        const assistantMessageId = await saveMessage(assistantMessage); 
         setInitialMessages((prev) => [
           ...prev,
           { ...assistantMessage, id: assistantMessageId.toString() },
@@ -55,6 +55,7 @@ const MainLayout = () => {
         setProject({ code: projectCode, framework });
         setShowSplitScreen(true);
       }
+      
     } catch (error) {
       console.error('Error generating code:', error);
       const errorMessage: Message = {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { TypingAnimation } from '@/components/magicui/typing-animation';
 import { CameraIcon, X, Edit2 } from 'lucide-react';
+import { useChatHistory } from '@/persistence/useChatHistory';
 
 export interface Message {
   text: string;
@@ -25,10 +26,12 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const {clearChatHistory} = useChatHistory();
 
   const handleNewChat = () => {
     setMessages([]);
     onCodeUpdate(null);
+    clearChatHistory();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
