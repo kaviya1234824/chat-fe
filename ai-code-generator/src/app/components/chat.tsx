@@ -91,6 +91,7 @@ const ChatSection = ({ onCodeUpdate, initialMessages = [], onLoadingChange }: Ch
         setIsLoading(false);
         onLoadingChange && onLoadingChange(false);
         setInput('');
+        // Optionally clear the image after sending
         setUploadedImage(null);
       }
     }
